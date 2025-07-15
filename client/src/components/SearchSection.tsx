@@ -24,31 +24,30 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
 
   const handleInputChange = (value: string) => {
     setQuery(value);
-    // Real-time filtering with debounce would be implemented here
   };
 
   return (
-    <div className="bg-slate-50 rounded-2xl p-6 lg:p-8 shadow-sm border border-slate-200">
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-3xl mx-auto">
+      <div className="flex flex-col md:flex-row gap-3">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search events, topics, or keywords..."
+              placeholder="Event Title, Keywords, Company..."
               value={query}
               onChange={(e) => handleInputChange(e.target.value)}
-              className="pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent h-auto"
+              className="pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
         
         <Select value={industry} onValueChange={setIndustry}>
-          <SelectTrigger className="lg:min-w-[200px] rounded-xl border-slate-200 py-4 h-auto">
-            <SelectValue placeholder="All Industries" />
+          <SelectTrigger className="md:min-w-[160px] py-3 border-gray-300 rounded-md">
+            <SelectValue placeholder="All industries" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Industries</SelectItem>
+            <SelectItem value="all">All industries</SelectItem>
             {INDUSTRIES.map((ind) => (
               <SelectItem key={ind.value} value={ind.value}>
                 {ind.label}
@@ -58,11 +57,11 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
         </Select>
 
         <Select value={companyStage} onValueChange={setCompanyStage}>
-          <SelectTrigger className="lg:min-w-[200px] rounded-xl border-slate-200 py-4 h-auto">
-            <SelectValue placeholder="All Stages" />
+          <SelectTrigger className="md:min-w-[160px] py-3 border-gray-300 rounded-md">
+            <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
+            <SelectItem value="all">All categories</SelectItem>
             {COMPANY_STAGES.map((stage) => (
               <SelectItem key={stage.value} value={stage.value}>
                 {stage.label}
@@ -70,15 +69,14 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      <Button 
-        onClick={handleSearch}
-        className="w-full lg:w-auto bg-primary text-white px-8 py-4 rounded-xl font-medium hover:bg-blue-700"
-      >
-        <Search className="w-5 h-5 mr-2" />
-        Find Events
-      </Button>
+        <Button 
+          onClick={handleSearch}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"
+        >
+          Find Events
+        </Button>
+      </div>
     </div>
   );
 }

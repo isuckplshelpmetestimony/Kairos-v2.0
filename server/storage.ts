@@ -1,6 +1,6 @@
 import { users, events, type User, type InsertUser, type Event, type InsertEvent } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, sql } from "drizzle-orm";
 import type { SearchFilters } from "@/lib/types";
 
 export interface IStorage {
@@ -44,8 +44,8 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (filters.companyStage) {
-      // Check if the company stage exists in the array
-      conditions.push(ilike(events.companyStages, `%${filters.companyStage}%`));
+      // Check if the company stage exists in the array using PostgreSQL array operators
+      conditions.push(sql`${events.companyStages} @> ARRAY[${filters.companyStage}]`);
     }
     
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
