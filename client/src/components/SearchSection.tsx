@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
 import { SearchFilters } from '../lib/types';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from './ui/select';
+import { Search } from 'lucide-react';
 
 interface SearchSectionProps {
   onSearch: (filters: SearchFilters) => void;
@@ -36,42 +46,52 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
   };
 
   return (
-    <form className="mb-8 flex flex-col md:flex-row gap-4 items-center" onSubmit={handleSearch}>
-      <input
-        type="text"
-        placeholder="Search events, attendees, or goals..."
-        className="w-full md:w-1/3 px-4 py-2 border rounded focus:outline-none focus:ring"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        aria-label="Search events"
-      />
-      <select
-        className="w-full md:w-1/4 px-4 py-2 border rounded focus:outline-none"
-        value={industry}
-        onChange={e => setIndustry(e.target.value)}
-        aria-label="Filter by industry"
-      >
-        {industries.map(ind => (
-          <option key={ind} value={ind}>{ind}</option>
-        ))}
-      </select>
-      <select
-        className="w-full md:w-1/4 px-4 py-2 border rounded focus:outline-none"
-        value={companyStage}
-        onChange={e => setCompanyStage(e.target.value)}
-        aria-label="Filter by company stage"
-      >
-        {companyStages.map(stage => (
-          <option key={stage} value={stage}>{stage}</option>
-        ))}
-      </select>
-      <button
-        type="submit"
-        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        aria-label="Find Events"
-      >
-        Find Events
-      </button>
+    <form
+      className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto mb-10"
+      onSubmit={handleSearch}
+    >
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <Search className="w-6 h-6" />
+          </span>
+          <Input
+            type="text"
+            placeholder="Event Title, Keywords, Company..."
+            className="pl-12 pr-4 py-4 text-lg rounded-xl"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            aria-label="Search events"
+          />
+        </div>
+        <div className="w-full md:w-[180px]">
+          <Select value={industry} onValueChange={setIndustry}>
+            <SelectTrigger aria-label="Filter by industry" className="rounded-xl h-14 text-base">
+              <SelectValue placeholder="All industries" />
+            </SelectTrigger>
+            <SelectContent>
+              {industries.map(ind => (
+                <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full md:w-[180px]">
+          <Select value={companyStage} onValueChange={setCompanyStage}>
+            <SelectTrigger aria-label="Filter by company stage" className="rounded-xl h-14 text-base">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {companyStages.map(stage => (
+                <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button type="submit" className="w-full md:w-auto px-8 py-4 text-base rounded-xl h-14">
+          Find Events
+        </Button>
+      </div>
     </form>
   );
 }
