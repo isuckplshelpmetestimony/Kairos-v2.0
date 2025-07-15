@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
 
 export default function Header() {
   return (
@@ -7,9 +6,6 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-white" />
-            </div>
             <span className="text-lg font-semibold text-slate-900">Kairos v2.0</span>
           </div>
           <div>

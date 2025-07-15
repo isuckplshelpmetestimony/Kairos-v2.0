@@ -27,9 +27,9 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-3xl mx-auto">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-4xl mx-auto">
       <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1">
+        <div className="flex-[2]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -37,13 +37,13 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
               placeholder="Event Title, Keywords, Company..."
               value={query}
               onChange={(e) => handleInputChange(e.target.value)}
-              className="pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
         
-        <Select value={industry} onValueChange={setIndustry}>
-          <SelectTrigger className="md:min-w-[160px] py-3 border-gray-300 rounded-md">
+        <Select value={industry || "all"} onValueChange={setIndustry}>
+          <SelectTrigger className="md:w-[140px] py-3 border-gray-300 rounded-md text-sm">
             <SelectValue placeholder="All industries" />
           </SelectTrigger>
           <SelectContent>
@@ -56,8 +56,8 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           </SelectContent>
         </Select>
 
-        <Select value={companyStage} onValueChange={setCompanyStage}>
-          <SelectTrigger className="md:min-w-[160px] py-3 border-gray-300 rounded-md">
+        <Select value={companyStage || "all"} onValueChange={setCompanyStage}>
+          <SelectTrigger className="md:w-[140px] py-3 border-gray-300 rounded-md text-sm">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>

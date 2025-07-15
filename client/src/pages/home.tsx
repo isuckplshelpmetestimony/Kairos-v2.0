@@ -19,10 +19,10 @@ export default function Home() {
       <main className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold text-slate-900 mb-4">
-            Better Business Events Start Here.
+            Discover Business Events
           </h1>
           <p className="text-lg text-slate-600 mb-12">
-            By digital transformation companies, for digital transformation companies. Not official.
+            Find networking opportunities where your target clients attend in the Philippines
           </p>
 
           <SearchSection onSearch={handleSearch} />
