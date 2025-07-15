@@ -1,9 +1,21 @@
-import type { Event } from "../../shared/schema";
+export interface Event {
+  id: string;
+  eventName: string;
+  dateLocation: string;
+  attendees: string;
+  goals: string;
+  sourceUrl: string;
+  primaryIndustry: string;
+  secondaryIndustry?: string;
+  companyStages: string[];
+  eventType: string;
+  featured: boolean;
+}
 
 export interface SearchFilters {
-  query?: string;
-  industry?: string;
-  companyStage?: string;
+  query: string;
+  industry: string;
+  companyStage: string;
 }
 
 export interface EventsResponse {

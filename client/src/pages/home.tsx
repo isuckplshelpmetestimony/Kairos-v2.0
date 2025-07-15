@@ -1,21 +1,41 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import SearchSection from "../components/SearchSection";
 import FeaturedEvents from "../components/FeaturedEvents";
-import type { SearchFilters } from "../lib/types";
+import SearchResults from "../components/SearchResults";
+import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
+import type { SearchFilters, Event } from "../lib/types";
+import { loadEvents } from "../data/events";
 
 export default function Home() {
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    query: '',
+    industry: 'All industries',
+    companyStage: 'All categories',
+  });
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadEvents().then(events => {
+      setAllEvents(events);
+      setIsLoading(false);
+    });
+  }, []);
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
+    const results = filterEvents(allEvents, filters);
+    setFilteredEvents(results);
+    setHasSearched(true);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       {/* Main Content */}
       <main className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -25,13 +45,16 @@ export default function Home() {
           <p className="text-lg text-slate-600 mb-12">
             Find networking opportunities where your target clients attend in the Philippines
           </p>
-
           <SearchSection onSearch={handleSearch} />
         </div>
+        {isLoading ? (
+          <div className="text-center text-gray-500 mt-12">Loading events...</div>
+        ) : hasSearched ? (
+          <SearchResults events={filteredEvents} hasSearched={hasSearched} />
+        ) : (
+          <FeaturedEvents events={getFeaturedEvents(allEvents)} />
+        )}
       </main>
-
-      <FeaturedEvents searchFilters={searchFilters} />
-
       {/* Footer */}
       <footer className="bg-white border-t py-8">
         <div className="max-w-4xl mx-auto px-4 text-center">
