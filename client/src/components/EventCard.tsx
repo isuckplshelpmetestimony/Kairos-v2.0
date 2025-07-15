@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "./ui/badge";
 import { Calendar, ExternalLink } from "lucide-react";
-import type { Event } from "@shared/schema";
+import type { Event } from "../../shared/schema";
 
 interface EventCardProps {
   event: Event;

@@ -1,9 +1,11 @@
+import * as React from "react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Search } from "lucide-react";
-import { INDUSTRIES, COMPANY_STAGES, type SearchFilters } from "@/lib/types";
+import { INDUSTRIES, COMPANY_STAGES } from "../lib/types";
+import type { SearchFilters } from "../lib/types";
 
 interface SearchSectionProps {
   onSearch: (filters: SearchFilters) => void;

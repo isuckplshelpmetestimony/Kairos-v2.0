@@ -1,9 +1,10 @@
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 import EventCard from "./EventCard";
-import type { SearchFilters, EventsResponse } from "@/lib/types";
-import type { Event } from "@shared/schema";
+import type { SearchFilters, EventsResponse } from "../lib/types";
+import type { Event } from "../../shared/schema";
 
 interface FeaturedEventsProps {
   searchFilters: SearchFilters;

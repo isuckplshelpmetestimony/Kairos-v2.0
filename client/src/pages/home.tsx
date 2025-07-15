@@ -1,8 +1,9 @@
+import * as React from "react";
 import { useState } from "react";
-import Header from "@/components/Header";
-import SearchSection from "@/components/SearchSection";
-import FeaturedEvents from "@/components/FeaturedEvents";
-import type { SearchFilters } from "@/lib/types";
+import Header from "../components/Header";
+import SearchSection from "../components/SearchSection";
+import FeaturedEvents from "../components/FeaturedEvents";
+import type { SearchFilters } from "../lib/types";
 
 export default function Home() {
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});

@@ -1,4 +1,4 @@
-import type { Event } from "@shared/schema";
+import type { Event } from "../../shared/schema";
 
 export interface SearchFilters {
   query?: string;
