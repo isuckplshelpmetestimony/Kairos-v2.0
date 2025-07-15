@@ -43,59 +43,33 @@ export default function FeaturedEvents({ searchFilters }: FeaturedEventsProps) {
           <h2 className="text-2xl font-semibold text-slate-700 mb-2">{sectionTitle}</h2>
         </div>
 
-        {hasFilters ? (
-          // Show search results
-          isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
-                  <Skeleton className="h-6 w-3/4 mb-4" />
-                  <Skeleton className="h-4 w-1/2 mb-4" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                </div>
-              ))}
-            </div>
-          ) : events.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-600 text-lg mb-4">
-                No events found matching your criteria.
-              </p>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
+                <Skeleton className="h-6 w-3/4 mb-4" />
+                <Skeleton className="h-4 w-1/2 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-4" />
+              </div>
+            ))}
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-slate-600 text-lg mb-4">
+              {hasFilters ? "No events found matching your criteria." : "No featured events available."}
+            </p>
+            {hasFilters && (
               <p className="text-slate-500">
                 Try adjusting your search filters or search terms.
               </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event: Event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          )
+            )}
+          </div>
         ) : (
-          // Show featured companies (like BetterInternship)
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">Ayala</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">BPI</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">Globe</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">PLDT</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">SM Group</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">Jollibee</span>
-            </div>
-            <div className="flex items-center justify-center w-24 h-16 bg-gray-100 rounded border">
-              <span className="text-xs font-medium text-gray-500">ABS-CBN</span>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event: Event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
           </div>
         )}
       </div>
