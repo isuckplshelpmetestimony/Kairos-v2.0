@@ -6,7 +6,7 @@ import FeaturedEvents from "../components/FeaturedEvents";
 import SearchResults from "../components/SearchResults";
 import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
 import type { SearchFilters, Event } from "../lib/types";
-import { loadEvents } from "../data/events";
+import { loadEvents, loadStartupEvents } from "../data/events";
 
 export default function Home() {
   const [allEvents, setAllEvents] = useState<Event[]>([]);
@@ -20,8 +20,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadEvents().then(events => {
-      setAllEvents(events);
+    setIsLoading(true);
+    Promise.all([loadEvents(), loadStartupEvents()]).then(([events1, events2]) => {
+      setAllEvents([...events1, ...events2]);
       setIsLoading(false);
     });
   }, []);
