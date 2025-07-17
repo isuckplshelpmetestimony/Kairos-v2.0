@@ -1,4 +1,5 @@
 import emailjs from '@emailjs/browser';
+import { apiClient } from './api';
 
 // EmailJS Configuration - Replace with your actual values
 const EMAILJS_SERVICE_ID = 'service_tuw06h9';  // Your Service ID
@@ -22,21 +23,16 @@ export interface PaymentSubmission {
 }
 
 export const submitPaymentRequest = async (formData: { email: string; phone: string }) => {
-  // Store in localStorage (existing code)
-  const paymentSubmissions = JSON.parse(localStorage.getItem('paymentSubmissions') || '[]');
-
-  const newSubmission = {
-    id: Date.now(),
-    email: formData.email,
-    phone: formData.phone,
-    timestamp: new Date().toISOString(),
-    status: 'pending'
-  };
-
-  paymentSubmissions.push(newSubmission);
-  localStorage.setItem('paymentSubmissions', JSON.stringify(paymentSubmissions));
-
-  return newSubmission;
+  try {
+    const response = await apiClient.submitPayment(formData.email, formData.phone);
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Payment submission error:', error);
+    throw error;
+  }
 };
 
 export const sendNotificationEmail = async (formData: { email: string; phone: string }) => {

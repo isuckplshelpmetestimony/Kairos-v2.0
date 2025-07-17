@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 
 interface User {
   id: string;
@@ -31,62 +32,45 @@ const AdminPanel: React.FC = () => {
     }
   }, []);
 
-  const loadData = () => {
-    // Load users
-    const usersData = JSON.parse(localStorage.getItem('kairos_users') || '[]');
-    setUsers(usersData);
-
-    // Load payment submissions
-    const paymentsData = JSON.parse(localStorage.getItem('paymentSubmissions') || '[]');
-    setPaymentSubmissions(paymentsData);
+  const loadData = async () => {
+    try {
+      // Load users from backend
+      const usersResponse = await apiClient.getUsers();
+      if (usersResponse.data) {
+        setUsers(usersResponse.data);
+      }
+      // Load payments from backend
+      const paymentsResponse = await apiClient.getPayments();
+      if (paymentsResponse.data) {
+        setPaymentSubmissions(paymentsResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   };
 
-  const grantPremiumAccess = (userEmail: string) => {
-    const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
-    const updatedUsers = users.map((user: User) => {
-      if (user.email === userEmail) {
-        return {
-          ...user,
-          role: 'premium',
-          status: 'active',
-          premiumUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
-        };
+  const grantPremiumAccess = async (userId: string) => {
+    try {
+      const response = await apiClient.grantPremium(userId);
+      if (response.data) {
+        // Reload data to reflect changes
+        loadData();
       }
-      return user;
-    });
-
-    localStorage.setItem('kairos_users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-
-    // Update payment status
-    const payments = JSON.parse(localStorage.getItem('paymentSubmissions') || '[]');
-    const updatedPayments = payments.map((payment: PaymentSubmission) => {
-      if (payment.email === userEmail) {
-        return { ...payment, status: 'approved' };
-      }
-      return payment;
-    });
-
-    localStorage.setItem('paymentSubmissions', JSON.stringify(updatedPayments));
-    setPaymentSubmissions(updatedPayments);
+    } catch (error) {
+      console.error('Error granting premium:', error);
+    }
   };
 
-  const revokePremiumAccess = (userEmail: string) => {
-    const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
-    const updatedUsers = users.map((user: User) => {
-      if (user.email === userEmail) {
-        return {
-          ...user,
-          role: 'free',
-          status: 'active',
-          premiumUntil: undefined
-        };
+  const revokePremiumAccess = async (userId: string) => {
+    try {
+      const response = await apiClient.revokePremium(userId);
+      if (response.data) {
+        // Reload data to reflect changes
+        loadData();
       }
-      return user;
-    });
-
-    localStorage.setItem('kairos_users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
+    } catch (error) {
+      console.error('Error revoking premium:', error);
+    }
   };
 
   if (!isAdmin()) {
