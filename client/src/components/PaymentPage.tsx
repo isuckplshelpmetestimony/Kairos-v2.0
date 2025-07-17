@@ -45,9 +45,12 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
         <h1>🔒 Unlock Premium Events - ₱3,000</h1>
         <div className="qr-section">
           <h3>📱 GCash Payment</h3>
-          <div>GCash QR Code</div>
-          <img src="/attached_assets/Untitled_1752576972045.png" alt="GCash QR Code" className="qr-code" />
-          <p style={{ marginTop: '12px' }}><strong>GCash Number:</strong> 09291860540</p>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <img src="/IMG_1509.JPG" alt="GCash QR Code" className="qr-code" />
+          </div>
+          <p style={{ marginTop: '12px', fontWeight: 600, textAlign: 'center' }}>
+            GCash Number: 09291860540
+          </p>
         </div>
         <form onSubmit={handleSubmit}>
           <h3>✉️ Your Contact Details:</h3>
