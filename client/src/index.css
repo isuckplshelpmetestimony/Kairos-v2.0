@@ -48,6 +48,43 @@
   --radius: 0.5rem;
 }
 
+/* Monetization Premium Event Styles */
+.blurred-event {
+  position: relative;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.premium-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: all;
+  border-radius: 8px;
+}
+
+.premium-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.unlock-text {
+  color: white;
+  font-size: 14px;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -3,6 +3,7 @@ import { Event } from '../lib/types';
 
 interface EventCardProps {
   event: Event;
+  index?: number;
 }
 
 const industryColors: Record<string, string> = {
@@ -12,7 +13,7 @@ const industryColors: Record<string, string> = {
   'Banking & Financial Services': 'bg-purple-100 text-purple-800',
 };
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, index }: EventCardProps) {
   function getReadinessBadgeStyle(readiness: string): string {
     switch (readiness) {
       case '🚨 Needs Immediate Help':
@@ -25,8 +26,19 @@ export default function EventCard({ event }: EventCardProps) {
         return 'bg-gray-100 text-gray-700';
     }
   }
+  const isPremium = typeof index === 'number' && index > 0;
+  function handlePremiumClick(id: string) {
+    // Placeholder for premium click logic
+    alert('Unlock premium event: ' + id);
+  }
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full">
+    <div className={`bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full relative ${isPremium ? 'blurred-event' : ''}`}>
+      {isPremium && (
+        <div className="premium-overlay" onClick={() => handlePremiumClick(event.id)}>
+          <div className="premium-badge">Premium Event</div>
+          <div className="unlock-text">Click to unlock</div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold" aria-label="Event name">{event.eventName}</h3>
         <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${industryColors[event.primaryIndustry] || 'bg-gray-100 text-gray-700'}`}
