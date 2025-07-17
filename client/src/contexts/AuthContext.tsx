@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiClient } from '../lib/api';
 
 interface User {
   id: string;
@@ -37,37 +38,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const ADMIN_PHONE = '09291860540';
 
   useEffect(() => {
-    // Check if user is logged in on app start
-    const savedUser = localStorage.getItem('kairos_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        const response = await apiClient.verifyToken();
+        if (response.data) {
+          setUser(response.data.user);
+        } else {
+          // Token invalid, clear localStorage
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('kairos_user');
+        }
+      }
+    };
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Get users from localStorage
-      const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
-      const foundUser = users.find((u: User) => u.email === email);
-
-      if (!foundUser) {
-        throw new Error('User not found');
+      const response = await apiClient.login(email, password);
+      if (response.error) {
+        console.error('Login error:', response.error);
+        return false;
       }
-
-      // Simple password check (in real app, use proper hashing)
-      const passwords = JSON.parse(localStorage.getItem('kairos_passwords') || '{}');
-      if (passwords[email] !== password) {
-        throw new Error('Invalid password');
+      if (response.data) {
+        const { user, token } = response.data;
+        // Store token
+        localStorage.setItem('auth_token', token);
+        // Store user
+        setUser(user);
+        localStorage.setItem('kairos_user', JSON.stringify(user));
+        return true;
       }
-
-      // Check if admin
-      if (email === ADMIN_EMAIL) {
-        foundUser.role = 'admin';
-      }
-
-      setUser(foundUser);
-      localStorage.setItem('kairos_user', JSON.stringify(foundUser));
-      return true;
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -76,32 +79,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, phone: string): Promise<boolean> => {
     try {
-      const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
-      const passwords = JSON.parse(localStorage.getItem('kairos_passwords') || '{}');
-
-      // Check if user exists
-      if (users.some((u: User) => u.email === email)) {
-        throw new Error('User already exists');
+      const response = await apiClient.register(email, password, phone);
+      if (response.error) {
+        console.error('Signup error:', response.error);
+        return false;
       }
-
-      const newUser: User = {
-        id: Date.now().toString(),
-        email,
-        phone,
-        role: email === ADMIN_EMAIL ? 'admin' : 'free',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
-
-      users.push(newUser);
-      passwords[email] = password;
-
-      localStorage.setItem('kairos_users', JSON.stringify(users));
-      localStorage.setItem('kairos_passwords', JSON.stringify(passwords));
-
-      setUser(newUser);
-      localStorage.setItem('kairos_user', JSON.stringify(newUser));
-      return true;
+      if (response.data) {
+        const { user, token } = response.data;
+        // Store token
+        localStorage.setItem('auth_token', token);
+        // Store user
+        setUser(user);
+        localStorage.setItem('kairos_user', JSON.stringify(user));
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Signup error:', error);
       return false;
@@ -111,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('kairos_user');
+    localStorage.removeItem('auth_token');
   };
 
   const isAdmin = () => {
