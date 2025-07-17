@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
 import SearchSection from "../components/SearchSection";
 import FeaturedEvents from "../components/FeaturedEvents";
 import SearchResults from "../components/SearchResults";
@@ -57,7 +56,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       {/* Main Content */}
       <main className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
