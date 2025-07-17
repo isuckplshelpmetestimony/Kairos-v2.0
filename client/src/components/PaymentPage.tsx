@@ -76,8 +76,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             <h3>📝 Payment Instructions:</h3>
             <ol>
               <li>Send ₱3,000 via GCash to the number above</li>
-              <li>Fill out your contact details below</li>
-              <li>Wait for access confirmation (within 3 hours)</li>
+              <li>Fill out your contact details above</li>
+              <li>Wait for access confirmation (within 3 hours) - I will send an update through your email and phone number to notify you when your account has access to the premium events</li>
             </ol>
           </div>
           <div className="form-actions">
