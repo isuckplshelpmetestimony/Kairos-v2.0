@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Token invalid, clear localStorage
           localStorage.removeItem('auth_token');
           localStorage.removeItem('kairos_user');
-        }
+    }
       }
     };
     initializeAuth();
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Store user
         setUser(user);
         localStorage.setItem('kairos_user', JSON.stringify(user));
-        return true;
+      return true;
       }
       return false;
     } catch (error) {
@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Store user
         setUser(user);
         localStorage.setItem('kairos_user', JSON.stringify(user));
-        return true;
+      return true;
       }
       return false;
     } catch (error) {

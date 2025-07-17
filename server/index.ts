@@ -8,7 +8,11 @@ const app = express();
 
 // Enable CORS for frontend
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173", // Development
+    "https://kairos-v2.netlify.app", // Production frontend
+    "https://kairos-v2.vercel.app" // Alternative deployment
+  ],
   credentials: true
 }));
 app.use(express.json());
