@@ -46,7 +46,7 @@ export default function EventCard({ event }: EventCardProps) {
       <div className="flex flex-wrap gap-1 mb-2" aria-label="Company readiness">
         <span className={`px-2 py-1 text-xs rounded ${getReadinessBadgeStyle(event.companyReadiness)}`}>
           {event.companyReadiness}
-        </span>
+          </span>
       </div>
       <div className="mt-auto pt-2">
         <a

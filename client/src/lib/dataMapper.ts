@@ -1,5 +1,24 @@
 // Maps old company stages to new readiness levels
 export function mapCompanyStageToReadiness(oldStages: string[]): string {
+  // Recognize both emoji and plain text readiness values
+  const readinessLevels = [
+    '🚨 Needs Immediate Help',
+    '🔍 Exploring Solutions',
+    '📋 Planning Transformation',
+    'Needs Immediate Help',
+    'Exploring Solutions',
+    'Planning Transformation'
+  ];
+  const directMatch = oldStages.find(stage => readinessLevels.includes(stage));
+  if (directMatch) {
+    switch (directMatch) {
+      case 'Needs Immediate Help': return '🚨 Needs Immediate Help';
+      case 'Exploring Solutions': return '🔍 Exploring Solutions';
+      case 'Planning Transformation': return '📋 Planning Transformation';
+      default: return directMatch;
+    }
+  }
+
   // If stages include early-stage companies (high urgency)
   if (oldStages.some(stage =>
     ['Pre-seed Startups', 'Seed Stage', 'Series A'].includes(stage)
