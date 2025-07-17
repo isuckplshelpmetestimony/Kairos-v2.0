@@ -6,6 +6,7 @@ import { Toaster } from "./components/ui/toaster";
 import { TooltipProvider } from "./components/ui/tooltip";
 import Home from "./pages/home";
 import NotFound from "./pages/not-found";
+import { hasFullAccess } from './lib/authUtils';
 
 function Router() {
   return (
@@ -24,11 +25,27 @@ function App() {
   });
   const [premiumUsers, setPremiumUsers] = React.useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+
+  function showEventDetails(eventId: string) {
+    alert('Show event details for event ID: ' + eventId);
+  }
+
+  function handlePremiumClick(eventId: string) {
+    if (hasFullAccess(user.email, user.phone, premiumUsers)) {
+      showEventDetails(eventId);
+    } else {
+      setShowPaymentModal(true);
+    }
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <Switch>
+          <Route path="/" component={() => <Home user={user} premiumUsers={premiumUsers} setShowPaymentModal={setShowPaymentModal} showPaymentModal={showPaymentModal} />} />
+          <Route component={NotFound} />
+        </Switch>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -7,8 +7,16 @@ import SearchResults from "../components/SearchResults";
 import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
 import type { SearchFilters, Event } from "../lib/types";
 import { loadEvents, loadStartupEvents } from "../data/events";
+import { hasFullAccess } from '../lib/authUtils';
 
-export default function Home() {
+interface HomeProps {
+  user: { email: string; phone: string; role: string };
+  premiumUsers: any[];
+  setShowPaymentModal: React.Dispatch<React.SetStateAction<boolean>>;
+  showPaymentModal: boolean;
+}
+
+export default function Home({ user, premiumUsers, setShowPaymentModal, showPaymentModal }: HomeProps) {
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -34,6 +42,18 @@ export default function Home() {
     setHasSearched(true);
   };
 
+  function showEventDetails(eventId: string) {
+    alert('Show event details for event ID: ' + eventId);
+  }
+
+  function handlePremiumClick(eventId: string) {
+    if (hasFullAccess(user.email, user.phone, premiumUsers)) {
+      showEventDetails(eventId);
+    } else {
+      setShowPaymentModal(true);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -51,7 +71,7 @@ export default function Home() {
         {isLoading ? (
           <div className="text-center text-gray-500 mt-12">Loading events...</div>
         ) : hasSearched ? (
-          <SearchResults events={filteredEvents} hasSearched={hasSearched} />
+          <SearchResults events={filteredEvents} hasSearched={hasSearched} handlePremiumClick={handlePremiumClick} />
         ) : (
           <FeaturedEvents events={getFeaturedEvents(allEvents)} />
         )}

@@ -6,9 +6,10 @@ interface SearchResultsProps {
   events: Event[];
   isLoading?: boolean;
   hasSearched?: boolean;
+  handlePremiumClick?: (eventId: string) => void;
 }
 
-export default function SearchResults({ events, isLoading, hasSearched }: SearchResultsProps) {
+export default function SearchResults({ events, isLoading, hasSearched, handlePremiumClick }: SearchResultsProps) {
   if (isLoading) {
     return <div className="text-center text-gray-500">Loading events...</div>;
   }
@@ -22,7 +23,7 @@ export default function SearchResults({ events, isLoading, hasSearched }: Search
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event, index) => (
-          <EventCard key={event.id} event={event} index={index} />
+          <EventCard key={event.id} event={event} index={index} handlePremiumClick={handlePremiumClick} />
         ))}
       </div>
     </section>
