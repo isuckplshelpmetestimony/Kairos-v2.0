@@ -17,6 +17,13 @@ function Router() {
 }
 
 function App() {
+  const [user, setUser] = React.useState({
+    email: '',
+    phone: '',
+    role: 'free'
+  });
+  const [premiumUsers, setPremiumUsers] = React.useState<any[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
