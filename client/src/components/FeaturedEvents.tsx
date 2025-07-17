@@ -5,15 +5,15 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface FeaturedEventsProps {
   events: Event[];
+  setShowPaymentModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function FeaturedEvents({ events }: FeaturedEventsProps) {
+export default function FeaturedEvents({ events, setShowPaymentModal }: FeaturedEventsProps) {
   const { isPremium } = useAuth();
   const hasAccess = isPremium();
 
   function handlePremiumClick(eventId: string) {
-    // This should trigger the payment modal in the parent, but for now just alert
-    alert('Unlock premium to access this event!');
+    setShowPaymentModal(true);
   }
 
   if (!events.length) {

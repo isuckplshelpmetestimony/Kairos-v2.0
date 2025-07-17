@@ -72,7 +72,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
         ) : hasSearched ? (
           <SearchResults events={filteredEvents} hasSearched={hasSearched} handlePremiumClick={handlePremiumClick} />
         ) : (
-          <FeaturedEvents events={getFeaturedEvents(allEvents)} />
+          <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
         )}
         {showPaymentModal && <PaymentPage onClose={() => setShowPaymentModal(false)} />}
       </main>
