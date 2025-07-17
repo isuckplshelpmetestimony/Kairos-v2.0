@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
+import { submitPaymentRequest, sendNotificationEmail } from '../lib/paymentService';
 
 interface PaymentPageProps {
   onClose: () => void;
 }
-
-const submitPaymentRequest = async (formData: { email: string; phone: string }) => {
-  // TODO: Implement payment submission logic (e.g., API call)
-  return new Promise((resolve) => setTimeout(resolve, 1000));
-};
-
-const sendNotificationEmail = async (formData: { email: string; phone: string }) => {
-  // TODO: Implement email notification logic (e.g., API call)
-  return new Promise((resolve) => setTimeout(resolve, 1000));
-};
 
 const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -20,12 +11,32 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
     phone: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitPaymentRequest(formData);
-    await sendNotificationEmail(formData);
-    setIsSubmitted(true);
+    setIsSubmitting(true);
+
+    try {
+      // Store payment submission
+      await submitPaymentRequest(formData);
+
+      // Send email notification
+      try {
+        await sendNotificationEmail(formData);
+        console.log('✅ Admin notification sent successfully');
+      } catch (emailError) {
+        console.error('⚠️ Payment saved but email notification failed:', emailError);
+        // Don't block user - payment is still recorded
+      }
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      alert('Error submitting payment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -81,7 +92,9 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             </ol>
           </div>
           <div className="form-actions">
-            <button type="submit" className="submit-btn">Submit Payment Info</button>
+            <button type="submit" className="submit-btn" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Payment Info'}
+            </button>
             <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
           </div>
         </form>
