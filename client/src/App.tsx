@@ -1,54 +1,59 @@
-import * as React from "react";
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "./components/ui/toaster";
-import { TooltipProvider } from "./components/ui/tooltip";
-import Home from "./pages/home";
-import NotFound from "./pages/not-found";
-import { hasFullAccess } from './lib/authUtils';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AuthModal from './components/AuthModal';
+import AdminPanel from './components/AdminPanel';
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+const AppContent: React.FC = () => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const { user, logout, isAdmin, isPremium } = useAuth();
 
-function App() {
-  const [user, setUser] = React.useState({
-    email: '',
-    phone: '',
-    role: 'free'
-  });
-  const [premiumUsers, setPremiumUsers] = React.useState<any[]>([]);
-  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
-
-  function showEventDetails(eventId: string) {
-    alert('Show event details for event ID: ' + eventId);
-  }
-
-  function handlePremiumClick(eventId: string) {
-    if (hasFullAccess(user.email, user.phone, premiumUsers)) {
-      showEventDetails(eventId);
-    } else {
-      setShowPaymentModal(true);
-    }
-  }
+  // Your existing event logic here...
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Switch>
-          <Route path="/" component={() => <Home user={user} premiumUsers={premiumUsers} setShowPaymentModal={setShowPaymentModal} showPaymentModal={showPaymentModal} />} />
-          <Route component={NotFound} />
-        </Switch>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <div className="app">
+      {/* Header with auth buttons */}
+      <header className="app-header">
+        <h1>Kairos v2.0</h1>
+        <div className="auth-buttons">
+          {user ? (
+            <>
+              <span>Welcome, {user.email} ({user.role})</span>
+              {isAdmin() && (
+                <button onClick={() => setShowAdminPanel(true)}>Admin Panel</button>
+              )}
+              <button onClick={logout}>Logout</button>
+            </>
+          ) : (
+            <button onClick={() => setShowAuthModal(true)}>Sign In</button>
+          )}
+        </div>
+      </header>
+
+      {/* Your existing Kairos content */}
+      {/* ... */}
+
+      {/* Modals */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      {showAdminPanel && isAdmin() && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <AdminPanel />
+            <button onClick={() => setShowAdminPanel(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+};
 
 export default App;
