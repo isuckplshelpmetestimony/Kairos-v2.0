@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AuthModal from './components/AuthModal';
 import AdminPanel from './components/AdminPanel';
+import Home from './pages/home';
 
 const AppContent: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const { user, logout, isAdmin, isPremium } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [premiumUsers, setPremiumUsers] = useState<any[]>([]);
+  const { user, logout, isAdmin } = useAuth();
 
-  // Your existing event logic here...
+  useEffect(() => {
+    // Load premium users from localStorage
+    const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
+    const premium = users.filter((u: any) => u.role === 'premium' && u.status === 'active');
+    setPremiumUsers(premium);
+  }, [showAdminPanel, showPaymentModal]); // reload when admin panel or payment modal changes
 
   return (
     <div className="app">
@@ -30,8 +38,13 @@ const AppContent: React.FC = () => {
         </div>
       </header>
 
-      {/* Your existing Kairos content */}
-      {/* ... */}
+      {/* Main Kairos events content */}
+      <Home
+        user={user || { email: '', phone: '', role: 'free' }}
+        premiumUsers={premiumUsers}
+        setShowPaymentModal={setShowPaymentModal}
+        showPaymentModal={showPaymentModal}
+      />
 
       {/* Modals */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />

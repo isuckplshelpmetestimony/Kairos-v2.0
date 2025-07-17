@@ -1,12 +1,21 @@
 import React from 'react';
 import { Event } from '../lib/types';
 import EventCard from './EventCard';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FeaturedEventsProps {
   events: Event[];
 }
 
 export default function FeaturedEvents({ events }: FeaturedEventsProps) {
+  const { isPremium } = useAuth();
+  const hasAccess = isPremium();
+
+  function handlePremiumClick(eventId: string) {
+    // This should trigger the payment modal in the parent, but for now just alert
+    alert('Unlock premium to access this event!');
+  }
+
   if (!events.length) {
     return <div className="text-center text-gray-500">No featured events available.</div>;
   }
@@ -14,8 +23,14 @@ export default function FeaturedEvents({ events }: FeaturedEventsProps) {
     <section className="mb-8">
       <h2 className="text-2xl font-bold mb-4">Featured Events</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map(event => (
-          <EventCard key={event.id} event={event} />
+        {events.map((event, index) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            index={index}
+            handlePremiumClick={handlePremiumClick}
+            blurred={index > 0 && !hasAccess}
+          />
         ))}
       </div>
     </section>

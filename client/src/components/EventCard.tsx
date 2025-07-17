@@ -6,6 +6,7 @@ interface EventCardProps {
   event: Event;
   index?: number;
   handlePremiumClick?: (eventId: string) => void;
+  blurred?: boolean;
 }
 
 const industryColors: Record<string, string> = {
@@ -15,7 +16,7 @@ const industryColors: Record<string, string> = {
   'Banking & Financial Services': 'bg-purple-100 text-purple-800',
 };
 
-export default function EventCard({ event, index, handlePremiumClick }: EventCardProps) {
+export default function EventCard({ event, index, handlePremiumClick, blurred }: EventCardProps) {
   const [showPayment, setShowPayment] = React.useState(false);
   function getReadinessBadgeStyle(readiness: string): string {
     switch (readiness) {
@@ -29,13 +30,12 @@ export default function EventCard({ event, index, handlePremiumClick }: EventCar
         return 'bg-gray-100 text-gray-700';
     }
   }
-  const isPremium = typeof index === 'number' && index > 0;
   return (
-    <div className={`bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full relative ${isPremium ? 'blurred-event' : ''}`}>
-      {isPremium && (
+    <div className={`bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
+      {blurred && (
         <div className="premium-overlay" onClick={() => handlePremiumClick && handlePremiumClick(event.id)}>
           <div className="premium-badge">Premium Event</div>
-          <div className="unlock-text">Unlock access to premium events</div>
+          <div className="unlock-text">Click to unlock</div>
         </div>
       )}
       <div className="flex items-center justify-between mb-2">
