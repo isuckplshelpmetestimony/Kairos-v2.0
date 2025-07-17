@@ -59,14 +59,16 @@ class ApiClient {
   }
 
   async grantPremium(userId: string) {
-    return this.request<any>(`/users/${userId}/grant-premium`, {
-      method: 'POST'
+    return this.request<any>('/users/grant-premium', {
+      method: 'POST',
+      body: JSON.stringify({ userId })
     });
   }
 
   async revokePremium(userId: string) {
-    return this.request<any>(`/users/${userId}/revoke-premium`, {
-      method: 'POST'
+    return this.request<any>('/users/revoke-premium', {
+      method: 'POST',
+      body: JSON.stringify({ userId })
     });
   }
 
@@ -82,8 +84,16 @@ class ApiClient {
   }
 
   async approvePayment(paymentId: string) {
-    return this.request<any>(`/payments/${paymentId}/approve`, {
-      method: 'POST'
+    return this.request<any>('/payments/approve', {
+      method: 'POST',
+      body: JSON.stringify({ paymentId })
+    });
+  }
+
+  async rejectPayment(paymentId: string) {
+    return this.request<any>('/payments/reject', {
+      method: 'POST',
+      body: JSON.stringify({ paymentId })
     });
   }
 }

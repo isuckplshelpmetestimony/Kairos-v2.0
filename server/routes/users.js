@@ -1,11 +1,11 @@
-const express = require('express');
-const { sql } = require('../database/connection');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+import express from 'express';
+import sql from '../database/connection.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Get all users (admin only)
-router.get('/', verifyToken, requireAdmin, async (req, res) => {
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await sql`
       SELECT id, email, phone, role, status, premium_until, created_at
@@ -13,7 +13,7 @@ router.get('/', verifyToken, requireAdmin, async (req, res) => {
       ORDER BY created_at DESC
     `;
 
-    res.json(users);
+    res.json({ users });
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -21,50 +21,86 @@ router.get('/', verifyToken, requireAdmin, async (req, res) => {
 });
 
 // Grant premium access (admin only)
-router.post('/:userId/grant-premium', verifyToken, requireAdmin, async (req, res) => {
+router.post('/grant-premium', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { userId } = req.params;
-    const premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const { userId } = req.body;
 
-    const updatedUser = await sql`
-      UPDATE users
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Set premium until 1 year from now
+    const premiumUntil = new Date();
+    premiumUntil.setFullYear(premiumUntil.getFullYear() + 1);
+
+    const result = await sql`
+      UPDATE users 
       SET role = 'premium', status = 'active', premium_until = ${premiumUntil}
       WHERE id = ${userId}
-      RETURNING id, email, phone, role, status, premium_until
+      RETURNING id, email, role, status, premium_until
     `;
 
-    if (updatedUser.length === 0) {
+    if (result.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(updatedUser[0]);
+    res.json({
+      message: 'Premium access granted successfully',
+      user: result[0]
+    });
   } catch (error) {
-    console.error('Error granting premium:', error);
+    console.error('Error granting premium access:', error);
     res.status(500).json({ error: 'Failed to grant premium access' });
   }
 });
 
 // Revoke premium access (admin only)
-router.post('/:userId/revoke-premium', verifyToken, requireAdmin, async (req, res) => {
+router.post('/revoke-premium', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.body;
 
-    const updatedUser = await sql`
-      UPDATE users
-      SET role = 'free', premium_until = NULL
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const result = await sql`
+      UPDATE users 
+      SET role = 'free', status = 'active', premium_until = NULL
       WHERE id = ${userId}
-      RETURNING id, email, phone, role, status, premium_until
+      RETURNING id, email, role, status, premium_until
     `;
 
-    if (updatedUser.length === 0) {
+    if (result.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(updatedUser[0]);
+    res.json({
+      message: 'Premium access revoked successfully',
+      user: result[0]
+    });
   } catch (error) {
-    console.error('Error revoking premium:', error);
+    console.error('Error revoking premium access:', error);
     res.status(500).json({ error: 'Failed to revoke premium access' });
   }
 });
 
-module.exports = router;
+// Get user profile
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const users = await sql`
+      SELECT id, email, phone, role, status, premium_until, created_at
+      FROM users WHERE id = ${req.user.userId}
+    `;
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ user: users[0] });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+export default router; 

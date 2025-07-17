@@ -1,39 +1,61 @@
-const jwt = require('jsonwebtoken');
-const { sql } = require('../database/connection');
+import jwt from 'jsonwebtoken';
+import sql from '../database/connection.js';
 
-const verifyToken = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
+export const authenticateToken = async (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
 
-    // Check if user exists
-    const user = await sql`
-      SELECT id, email, phone, role, status
-      FROM users
-      WHERE id = ${decoded.userId}
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Verify user still exists
+    const users = await sql`
+      SELECT id, email, role FROM users WHERE id = ${decoded.userId}
     `;
 
-    if (user.length === 0) {
+    if (users.length === 0) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    req.user = user[0];
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      role: users[0].role
+    };
+
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
+    console.error('Token verification error:', error);
+    return res.status(403).json({ error: 'Invalid token' });
   }
 };
 
-const requireAdmin = (req, res, next) => {
+export const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // Check if user is admin
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
+
   next();
 };
 
-module.exports = { verifyToken, requireAdmin };
+export const requirePremium = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // Check if user is premium or admin
+  if (req.user.role !== 'premium' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Premium access required' });
+  }
+
+  next();
+}; 

@@ -1,16 +1,16 @@
-const { neon } = require('@neondatabase/serverless');
+import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-const testConnection = async () => {
+export const testConnection = async () => {
   try {
-    const result = await sql`SELECT NOW()`;
+    await sql`SELECT 1`;
     console.log('✅ Database connected successfully');
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('❌ Database connection failed:', error.message);
     return false;
   }
 };
 
-module.exports = { sql, testConnection };
+export default sql; 

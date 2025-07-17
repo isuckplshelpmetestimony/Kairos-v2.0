@@ -1,17 +1,21 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { sql } = require('../database/connection');
-const { verifyToken } = require('../middleware/auth');
+import express from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import sql from '../database/connection.js';
 
 const router = express.Router();
 
-// Register
+// Register user
 router.post('/register', async (req, res) => {
   try {
     const { email, password, phone } = req.body;
 
-    // Check if user exists
+    // Validate input
+    if (!email || !password || !phone) {
+      return res.status(400).json({ error: 'Email, password, and phone are required' });
+    }
+
+    // Check if user already exists
     const existingUser = await sql`
       SELECT id FROM users WHERE email = ${email}
     `;
@@ -23,25 +27,29 @@ router.post('/register', async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Determine role
-    const role = email === process.env.ADMIN_EMAIL ? 'admin' : 'free';
-
-    // Create user
+    // Insert new user
     const newUser = await sql`
-      INSERT INTO users (email, phone, password_hash, role)
-      VALUES (${email}, ${phone}, ${passwordHash}, ${role})
-      RETURNING id, email, phone, role, status, created_at
+      INSERT INTO users (email, phone, password_hash, role, status)
+      VALUES (${email}, ${phone}, ${passwordHash}, 'free', 'active')
+      RETURNING id, email, phone, role, status
     `;
 
-    // Generate JWT
+    // Generate JWT token
     const token = jwt.sign(
       { userId: newUser[0].id, email: newUser[0].email },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '24h' }
     );
 
     res.status(201).json({
-      user: newUser[0],
+      message: 'User registered successfully',
+      user: {
+        id: newUser[0].id,
+        email: newUser[0].email,
+        phone: newUser[0].phone,
+        role: newUser[0].role,
+        status: newUser[0].status
+      },
       token
     });
   } catch (error) {
@@ -50,41 +58,51 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+// Login user
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     // Find user
-    const user = await sql`
+    const users = await sql`
       SELECT id, email, phone, password_hash, role, status, premium_until
-      FROM users
-      WHERE email = ${email}
+      FROM users WHERE email = ${email}
     `;
 
-    if (user.length === 0) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user[0].password_hash);
+    const user = users[0];
 
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT
+    // Generate JWT token
     const token = jwt.sign(
-      { userId: user[0].id, email: user[0].email },
+      { userId: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '24h' }
     );
 
-    // Remove password hash from response
-    const { password_hash, ...userWithoutPassword } = user[0];
-
     res.json({
-      user: userWithoutPassword,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        status: user.status,
+        premium_until: user.premium_until
+      },
       token
     });
   } catch (error) {
@@ -93,9 +111,41 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Verify token (for frontend auth checking)
-router.get('/verify', verifyToken, (req, res) => {
-  res.json({ user: req.user });
+// Verify token
+router.get('/verify', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Get user data
+    const users = await sql`
+      SELECT id, email, phone, role, status, premium_until
+      FROM users WHERE id = ${decoded.userId}
+    `;
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    res.json({
+      user: {
+        id: users[0].id,
+        email: users[0].email,
+        phone: users[0].phone,
+        role: users[0].role,
+        status: users[0].status,
+        premium_until: users[0].premium_until
+      }
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
 });
 
-module.exports = router;
+export default router; 

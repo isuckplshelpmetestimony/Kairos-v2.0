@@ -1,10 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const { testConnection } = require('./database/connection');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { testConnection } from './database/connection.js';
 
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const paymentRoutes = require('./routes/payments');
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import paymentRoutes from './routes/payments.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,4 +37,4 @@ const startServer = async () => {
   });
 };
 
-startServer();
+startServer(); 
