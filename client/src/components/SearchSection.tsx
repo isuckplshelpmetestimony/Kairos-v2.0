@@ -23,22 +23,17 @@ const industries = [
   'Banking & Financial Services',
 ];
 
-const companyStages = [
-  'All Stages',
-  'Pre-seed Startups',
-  'Seed Stage',
-  'Series A',
-  'Series B+',
-  'Growth Stage',
-  'SMEs',
-  'Large Enterprises',
-  'Multinational Corporations',
+const newCompanyStageOptions = [
+  "All categories",
+  "🚨 Needs Immediate Help",
+  "🔍 Exploring Solutions",
+  "📋 Planning Transformation"
 ];
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
   const [query, setQuery] = useState('');
   const [industry, setIndustry] = useState('All industries');
-  const [companyStage, setCompanyStage] = useState('All Stages');
+  const [companyStage, setCompanyStage] = useState('All categories');
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -78,11 +73,11 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
         </div>
         <div className="w-full md:w-[180px]">
           <Select value={companyStage} onValueChange={setCompanyStage}>
-            <SelectTrigger aria-label="Filter by company stage" className="rounded-xl h-14 text-base">
-              <SelectValue placeholder="All Stages" />
+            <SelectTrigger aria-label="Filter by company readiness" className="rounded-xl h-14 text-base">
+              <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
-              {companyStages.map(stage => (
+              {newCompanyStageOptions.map(stage => (
                 <SelectItem key={stage} value={stage}>{stage}</SelectItem>
               ))}
             </SelectContent>

@@ -12,11 +12,11 @@ export function filterEvents(events: Event[], filters: SearchFilters): Event[] {
     const matchesIndustry = filters.industry === 'All industries' || 
       event.primaryIndustry === filters.industry;
 
-    // Company stage filter
-    const matchesCompanyStage = filters.companyStage === 'All categories' ||
-      event.companyStages.includes(filters.companyStage);
+    // Company readiness filter (replaces company stage filter)
+    const matchesReadiness = filters.companyStage === 'All categories' ||
+      event.companyReadiness === filters.companyStage;
 
-    return matchesQuery && matchesIndustry && matchesCompanyStage;
+    return matchesQuery && matchesIndustry && matchesReadiness;
   });
 }
 

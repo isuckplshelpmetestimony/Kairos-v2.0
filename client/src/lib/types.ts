@@ -7,7 +7,8 @@ export interface Event {
   sourceUrl: string;
   primaryIndustry: string;
   secondaryIndustry?: string;
-  companyStages: string[];
+  companyStages: string[]; // Keep original for reference
+  companyReadiness: string; // NEW - mapped readiness level
   eventType: string;
   featured: boolean;
 }
@@ -15,7 +16,7 @@ export interface Event {
 export interface SearchFilters {
   query: string;
   industry: string;
-  companyStage: string;
+  companyStage: string; // Now represents readiness
 }
 
 export interface EventsResponse {

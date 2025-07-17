@@ -13,6 +13,18 @@ const industryColors: Record<string, string> = {
 };
 
 export default function EventCard({ event }: EventCardProps) {
+  function getReadinessBadgeStyle(readiness: string): string {
+    switch (readiness) {
+      case '🚨 Needs Immediate Help':
+        return 'bg-red-100 text-red-700';
+      case '🔍 Exploring Solutions':
+        return 'bg-yellow-100 text-yellow-700';
+      case '📋 Planning Transformation':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  }
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
@@ -31,12 +43,10 @@ export default function EventCard({ event }: EventCardProps) {
         <span className="block text-xs text-gray-400">Goals:</span>
         <span className="text-sm">{event.goals}</span>
       </div>
-      <div className="flex flex-wrap gap-1 mb-2" aria-label="Company stages">
-        {event.companyStages.map((stage, i) => (
-          <span key={i} className="bg-gray-100 text-gray-700 rounded px-2 py-0.5 text-xs font-medium">
-            {stage}
-          </span>
-        ))}
+      <div className="flex flex-wrap gap-1 mb-2" aria-label="Company readiness">
+        <span className={`px-2 py-1 text-xs rounded ${getReadinessBadgeStyle(event.companyReadiness)}`}>
+          {event.companyReadiness}
+        </span>
       </div>
       <div className="mt-auto pt-2">
         <a
