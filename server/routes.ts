@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEventSchema } from "@shared/schema";
 import { z } from "zod";
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/users.js";
+import paymentRoutes from "./routes/payments.js";
 
 const searchParamsSchema = z.object({
   query: z.string().optional(),
@@ -11,6 +14,11 @@ const searchParamsSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register API routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/users", userRoutes);
+  app.use("/api/payments", paymentRoutes);
+
   // Get all events with optional filtering
   app.get("/api/events", async (req, res) => {
     try {
