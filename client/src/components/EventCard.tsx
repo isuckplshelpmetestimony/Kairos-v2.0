@@ -1,5 +1,6 @@
 import React from 'react';
 import { Event } from '../lib/types';
+import PaymentPage from './PaymentPage';
 
 interface EventCardProps {
   event: Event;
@@ -14,6 +15,7 @@ const industryColors: Record<string, string> = {
 };
 
 export default function EventCard({ event, index }: EventCardProps) {
+  const [showPayment, setShowPayment] = React.useState(false);
   function getReadinessBadgeStyle(readiness: string): string {
     switch (readiness) {
       case '🚨 Needs Immediate Help':
@@ -27,16 +29,15 @@ export default function EventCard({ event, index }: EventCardProps) {
     }
   }
   const isPremium = typeof index === 'number' && index > 0;
-  function handlePremiumClick(id: string) {
-    // Placeholder for premium click logic
-    alert('Unlock premium event: ' + id);
+  function handlePremiumClick() {
+    alert('Payment required to unlock premium events.');
   }
   return (
     <div className={`bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full relative ${isPremium ? 'blurred-event' : ''}`}>
       {isPremium && (
-        <div className="premium-overlay" onClick={() => handlePremiumClick(event.id)}>
+        <div className="premium-overlay" onClick={handlePremiumClick}>
           <div className="premium-badge">Premium Event</div>
-          <div className="unlock-text">Click to unlock</div>
+          <div className="unlock-text">Unlock access to premium events</div>
         </div>
       )}
       <div className="flex items-center justify-between mb-2">
