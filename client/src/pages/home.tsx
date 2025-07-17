@@ -8,6 +8,7 @@ import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
 import type { SearchFilters, Event } from "../lib/types";
 import { loadEvents, loadStartupEvents } from "../data/events";
 import { hasFullAccess } from '../lib/authUtils';
+import PaymentPage from '../components/PaymentPage';
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -75,6 +76,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
         ) : (
           <FeaturedEvents events={getFeaturedEvents(allEvents)} />
         )}
+        {showPaymentModal && <PaymentPage onClose={() => setShowPaymentModal(false)} />}
       </main>
       {/* Footer */}
       <footer className="bg-white border-t py-8">
