@@ -20,6 +20,15 @@ app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Health check endpoint for UptimeRobot monitoring
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    status: 'alive', 
+    timestamp: Date.now(),
+    service: 'kairos-v2-api'
+  });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

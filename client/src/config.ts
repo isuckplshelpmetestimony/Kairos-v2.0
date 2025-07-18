@@ -1,7 +1,7 @@
 // Get the API base URL from environment variables or use defaults
 const getApiBaseUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://kairos-v2-backend.onrender.com/api';
+  if (import.meta.env.PROD) {
+    return 'https://kairos-v2-0.onrender.com/api';
   }
   
   // In development, use the same port as the server
