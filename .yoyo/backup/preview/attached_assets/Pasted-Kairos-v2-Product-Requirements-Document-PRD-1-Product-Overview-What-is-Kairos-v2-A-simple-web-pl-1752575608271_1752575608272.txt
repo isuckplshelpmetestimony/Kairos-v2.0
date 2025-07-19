@@ -1,0 +1,269 @@
+Kairos v2 Product Requirements Document (PRD)
+1. Product Overview
+What is Kairos v2?
+A simple web platform that helps digital transformation companies in the Philippines find potential clients by discovering relevant business events where their target prospects attend.
+Core Value Proposition
+Instead of cold calling or random networking, digital transformation companies can strategically attend events where their ideal clients (specific industries and company stages) will be present.
+Success Metrics
+
+Users can search and filter events in under 30 seconds
+Platform displays relevant events based on industry + company stage filters
+Clean, professional interface that loads fast
+
+
+2. Tech Stack (Simplest Approach)
+Frontend
+
+Next.js 14 (App Router)
+Tailwind CSS for styling
+TypeScript for type safety
+
+Backend
+
+Next.js API Routes (no separate backend needed)
+Vercel Postgres (managed database)
+Prisma ORM for database operations
+
+Deployment
+
+Vercel (one-click deployment with Next.js)
+
+Why This Stack?
+
+Everything in one codebase (frontend + backend)
+Minimal setup and configuration
+Free tier available for all services
+AI-friendly with extensive documentation
+
+
+3. Database Schema (Simple)
+Events Table
+sqlCREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  event_name VARCHAR(255) NOT NULL,
+  date_location TEXT,
+  attendee_types TEXT,
+  goals_served VARCHAR(255),
+  source_url TEXT,
+  industry VARCHAR(100),
+  company_stages TEXT[], -- Array of applicable stages
+  created_at TIMESTAMP DEFAULT NOW()
+);
+Users Table (Future Phase)
+sqlCREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE,
+  company_name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+4. Core Features (MVP)
+4.1 Homepage
+
+Clean landing page similar to BetterInternship
+Search bar with placeholder: "Event Type, Industry, Company Size..."
+Two dropdown filters
+"Find Events" button
+Featured events section
+
+4.2 Search & Filter System
+
+Industry Filter: Technology, Government & Public Sector, Retail & E-commerce, Banking & Financial Services
+Company Stage Filter: Pre-seed Startups, Seed Stage, Series A, Series B+, Growth Stage, SMEs, Large Enterprises, Multinational Corporations
+Real-time filtering (no page reload)
+Display matching events in cards
+
+4.3 Event Display
+
+Event cards showing:
+
+Event name
+Date & location
+Type of attendees
+Goals served
+Source link
+
+
+Responsive grid layout
+
+
+5. Development Steps (AI-Friendly)
+Phase 1: Project Setup (Day 1)
+
+Create Next.js project with TypeScript
+bashnpx create-next-app@latest kairos-v2 --typescript --tailwind --app
+
+Install additional dependencies:
+bashnpm install @prisma/client prisma @vercel/postgres
+
+Set up Prisma schema
+Create basic folder structure:
+/app
+  /components
+    Header.tsx
+    SearchSection.tsx
+    EventCard.tsx
+    FilterDropdown.tsx
+  /api
+    /events
+      route.ts
+  page.tsx
+  layout.tsx
+
+
+Phase 2: Database & Data Import (Day 2)
+
+Set up Vercel Postgres database
+Create Prisma schema for events table
+Create data import script for CSV files
+Migrate and seed database with event data
+Create API endpoint: GET /api/events
+
+Phase 3: Homepage UI (Day 3)
+
+Create Header component with logo and sign-in button
+Create SearchSection component:
+
+Search input field
+Two dropdown filters (Industry, Company Stage)
+"Find Events" button
+
+
+Create responsive layout
+Style with Tailwind CSS to match BetterInternship design
+
+Phase 4: Search Functionality (Day 4)
+
+Create FilterDropdown component with predefined options
+Implement search state management
+Create API endpoint for filtered searches
+Connect frontend filters to backend queries
+Add loading states
+
+Phase 5: Event Display (Day 5)
+
+Create EventCard component
+Implement event grid layout
+Add responsive design for mobile
+Connect search results to event display
+Add "no results" state
+
+Phase 6: Polish & Deploy (Day 6)
+
+Add featured events section
+Optimize loading performance
+Test all functionality
+Deploy to Vercel
+Test production deployment
+
+
+6. File Structure
+kairos-v2/
+├── app/
+│   ├── components/
+│   │   ├── Header.tsx
+│   │   ├── SearchSection.tsx
+│   │   ├── FilterDropdown.tsx
+│   │   ├── EventCard.tsx
+│   │   └── FeaturedEvents.tsx
+│   ├── api/
+│   │   └── events/
+│   │       └── route.ts
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── lib/
+│   ├── prisma.ts
+│   └── types.ts
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.ts
+├── scripts/
+│   └── import-csv.ts
+└── public/
+    └── logo.png
+
+7. Key Components Specifications
+SearchSection Component
+typescriptinterface SearchSectionProps {
+  onSearch: (filters: SearchFilters) => void;
+}
+
+interface SearchFilters {
+  query: string;
+  industry: string;
+  companyStage: string;
+}
+EventCard Component
+typescriptinterface EventCardProps {
+  event: {
+    id: number;
+    eventName: string;
+    dateLocation: string;
+    attendeeTypes: string;
+    goalsServed: string;
+    sourceUrl: string;
+  };
+}
+FilterDropdown Component
+typescriptinterface FilterDropdownProps {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
+}
+
+8. API Endpoints
+GET /api/events
+typescript// Query parameters:
+// ?industry=Technology&companyStage=Series A&query=AI
+
+// Response:
+{
+  events: Event[],
+  total: number,
+  page: number
+}
+
+9. Environment Variables
+env# Database
+POSTGRES_URL="your-vercel-postgres-url"
+POSTGRES_PRISMA_URL="your-prisma-url"
+
+# Optional: Authentication (future)
+NEXTAUTH_SECRET="your-secret"
+
+10. Acceptance Criteria
+Must Have (MVP)
+
+ Homepage loads in under 2 seconds
+ Users can filter by industry and company stage
+ Search returns relevant events
+ Mobile responsive design
+ Events display with all required information
+ Clean, professional UI matching reference design
+
+Nice to Have (Future)
+
+ User authentication
+ Save favorite events
+ Email notifications for new events
+ Advanced search with date ranges
+ Event calendar view
+
+
+11. Success Criteria
+
+Technical: Site loads fast, works on mobile, no bugs
+User Experience: Users can find relevant events in under 30 seconds
+Business: Platform helps digital transformation companies discover new networking opportunities
+
+
+12. Deployment Checklist
+
+ Environment variables set in Vercel
+ Database migrated and seeded
+ Domain configured (optional)
+ Analytics added (Google Analytics)
+ Error monitoring (optional)
+ Performance testing completed
