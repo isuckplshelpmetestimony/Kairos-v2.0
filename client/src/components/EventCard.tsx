@@ -35,7 +35,10 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
   return (
     <div className={`card-premium flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
       {blurred && (
-        <div className="premium-overlay" onClick={() => handlePremiumClick && handlePremiumClick(event.id)}>
+        <div 
+          className="premium-overlay" 
+          onClick={() => handlePremiumClick && handlePremiumClick(event.id)}
+        >
           <div className="premium-badge">Premium Event</div>
           <div className="unlock-text">Click to unlock</div>
         </div>

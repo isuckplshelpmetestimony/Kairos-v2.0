@@ -50,10 +50,13 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   }
 
   function handlePremiumClick(eventId: string) {
-    if (hasFullAccess(user.email, user.phone, premiumUsers)) {
+    // Check if user is actually premium (not just admin)
+    const isPremiumUser = user.role === 'premium' || hasFullAccess(user.email, user.phone, premiumUsers);
+    
+    if (isPremiumUser && user.role !== 'free') {
       showEventDetails(eventId);
     } else {
-      // Unpaid users go directly to payment wall - no event details revealed
+      // Free users go directly to payment wall - no event details revealed
       setShowPaymentModal(true);
     }
   }
