@@ -16,6 +16,13 @@ const AppContent: React.FC = () => {
   // Check if we're on login or signup pages
   const isAuthPage = location === '/login' || location === '/signup';
 
+  // Redirect unauthenticated users to login page
+  useEffect(() => {
+    if (!user && !isAuthPage && location === '/') {
+      setLocation('/login');
+    }
+  }, [user, isAuthPage, location, setLocation]);
+
   useEffect(() => {
     // Load premium users from localStorage
     const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
