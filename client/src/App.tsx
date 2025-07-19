@@ -13,6 +13,9 @@ const AppContent: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
   const [location, setLocation] = useLocation();
 
+  // Check if we're on login or signup pages
+  const isAuthPage = location === '/login' || location === '/signup';
+
   useEffect(() => {
     // Load premium users from localStorage
     const users = JSON.parse(localStorage.getItem('kairos_users') || '[]');
@@ -22,59 +25,64 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="app">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold gradient-text tracking-wider">
-                KAIROS
-              </h1>
-            </div>
+      {/* Header - Only show on main page */}
+      {!isAuthPage && (
+        <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo */}
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold gradient-text tracking-wider">
+                  KAIROS
+                </h1>
+              </div>
 
-            {/* Navigation */}
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <span className="text-gray-300 text-sm">
-                    Welcome, {user.email} ({user.role})
-                  </span>
-                  {isAdmin() && (
+              {/* Navigation */}
+              <div className="flex items-center space-x-4">
+                {user ? (
+                  <>
+                    <span className="text-gray-300 text-sm">
+                      Welcome, {user.email} ({user.role})
+                    </span>
+                    {isAdmin() && (
+                      <button 
+                        onClick={() => setShowAdminPanel(true)}
+                        className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
+                      >
+                        Admin Panel
+                      </button>
+                    )}
                     <button 
-                      onClick={() => setShowAdminPanel(true)}
+                      onClick={() => {
+                        logout();
+                        setLocation('/login');
+                      }}
                       className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
                     >
-                      Admin Panel
+                      Logout
                     </button>
-                  )}
-                  <button 
-                    onClick={logout}
-                    className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => setLocation('/login')}
-                    className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    Sign In
-                  </button>
-                  <button 
-                    onClick={() => setLocation('/signup')}
-                    className="px-4 py-2 btn-premium"
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setLocation('/login')}
+                      className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      Sign In
+                    </button>
+                    <button 
+                      onClick={() => setLocation('/signup')}
+                      className="px-4 py-2 btn-premium"
+                    >
+                      Sign Up
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Routing */}
       <Switch>

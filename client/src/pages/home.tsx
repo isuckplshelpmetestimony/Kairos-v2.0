@@ -66,14 +66,9 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
       {/* Main Content */}
       <main className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          {/* AI-Powered Tag */}
-          <div className="inline-flex items-center space-x-2 glass-effect px-4 py-2 mb-8">
-            <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-            </svg>
-            <span className="text-white text-sm font-medium">AI-Powered Event Discovery</span>
-          </div>
-
+          {/* Spacing to maintain layout */}
+          <div className="mb-8"></div>
+          
           {/* Main Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Discover Business Events for{' '}
