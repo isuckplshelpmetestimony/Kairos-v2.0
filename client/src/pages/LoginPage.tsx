@@ -28,32 +28,50 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="auth-modal" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-        <h2>Sign In</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={e => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={e => setFormData({ ...formData, password: e.target.value })}
-            required
-          />
-          <button type="submit" className="auth-submit-btn" disabled={isLoading}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a1b3a 0%, #2d2f5e 100%)' }}>
+      <div className="card-premium p-8 max-w-md w-full mx-4">
+        <h2 className="text-3xl font-bold gradient-text mb-8 text-center">Sign In</h2>
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/50 border border-red-500/30 rounded-lg text-red-300">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="w-full input-premium"
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              required
+              className="w-full input-premium"
+            />
+          </div>
+          <button 
+            type="submit" 
+            className="w-full btn-premium" 
+            disabled={isLoading}
+          >
             {isLoading ? 'Loading...' : 'Sign In'}
           </button>
         </form>
-        <p className="auth-switch">
+        <p className="text-center text-gray-300 mt-6">
           Don't have an account?{' '}
-          <Link href="/signup"><button className="auth-switch-btn">Sign Up</button></Link>
+          <Link href="/signup">
+            <button className="gradient-text hover:underline font-medium">
+              Sign Up
+            </button>
+          </Link>
         </p>
       </div>
     </div>

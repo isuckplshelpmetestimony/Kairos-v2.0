@@ -99,22 +99,35 @@ const AdminPanel: React.FC = () => {
   };
 
   if (!isAdmin()) {
-    return <div>Access denied. Admin only.</div>;
+    return (
+      <div className="card-premium p-8 text-center">
+        <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
+        <p className="text-gray-300">Admin only.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="admin-panel">
-      <h2>Admin Panel</h2>
+    <div className="card-premium p-8 max-w-6xl mx-auto">
+      <h2 className="text-3xl font-bold gradient-text mb-8">Admin Panel</h2>
 
-      <div className="admin-tabs">
+      <div className="flex space-x-4 mb-8">
         <button
-          className={activeTab === 'payments' ? 'active' : ''}
+          className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            activeTab === 'payments' 
+              ? 'btn-premium' 
+              : 'text-white border border-white/20 hover:bg-white/10'
+          }`}
           onClick={() => setActiveTab('payments')}
         >
           Payment Submissions ({paymentSubmissions.filter(p => p.status === 'pending').length})
         </button>
         <button
-          className={activeTab === 'users' ? 'active' : ''}
+          className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            activeTab === 'users' 
+              ? 'btn-premium' 
+              : 'text-white border border-white/20 hover:bg-white/10'
+          }`}
           onClick={() => setActiveTab('users')}
         >
           All Users ({users.length})
@@ -122,69 +135,101 @@ const AdminPanel: React.FC = () => {
       </div>
 
       {activeTab === 'payments' && (
-        <div className="payments-tab">
-          <h3>Pending Payments</h3>
+        <div className="space-y-6">
+          <h3 className="text-2xl font-bold text-white mb-6">Pending Payments</h3>
           {paymentSubmissions.filter(p => p.status === 'pending').map(payment => (
-            <div key={payment.id} className="payment-card">
-              <div className="payment-info">
-                <p><strong>Email:</strong> {payment.email}</p>
-                <p><strong>Phone:</strong> {payment.phone}</p>
-                <p><strong>Submitted:</strong> {new Date(payment.timestamp || payment.submitted_at).toLocaleString()}</p>
-                <p><strong>Status:</strong> {payment.status}</p>
-              </div>
-              <div className="payment-actions">
-                <button
-                  onClick={() => approvePayment(payment.id.toString())}
-                  className="approve-btn"
-                >
-                  Approve Payment
-                </button>
-                <button
-                  onClick={() => rejectPayment(payment.id.toString())}
-                  className="reject-btn"
-                >
-                  Reject Payment
-                </button>
+            <div key={payment.id} className="card-premium p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-gray-300"><span className="text-white font-semibold">Email:</span> {payment.email}</p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Phone:</span> {payment.phone}</p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Submitted:</span> {new Date(payment.timestamp || payment.submitted_at).toLocaleString()}</p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Status:</span> 
+                    <span className="badge-premium ml-2">{payment.status}</span>
+                  </p>
+                </div>
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={() => approvePayment(payment.id.toString())}
+                    className="btn-premium"
+                  >
+                    Approve Payment
+                  </button>
+                  <button
+                    onClick={() => rejectPayment(payment.id.toString())}
+                    className="px-4 py-2 text-white border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
+                  >
+                    Reject Payment
+                  </button>
+                </div>
               </div>
             </div>
           ))}
+          {paymentSubmissions.filter(p => p.status === 'pending').length === 0 && (
+            <div className="text-center text-gray-300 py-8">
+              <p>No pending payments</p>
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === 'users' && (
-        <div className="users-tab">
-          <h3>All Users</h3>
+        <div className="space-y-6">
+          <h3 className="text-2xl font-bold text-white mb-6">All Users</h3>
           {users.map(user => (
-            <div key={user.id} className="user-card">
-              <div className="user-info">
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Phone:</strong> {user.phone}</p>
-                <p><strong>Role:</strong> {user.role}</p>
-                <p><strong>Status:</strong> {user.status}</p>
-                {user.premiumUntil && (
-                  <p><strong>Premium Until:</strong> {new Date(user.premiumUntil).toLocaleDateString()}</p>
-                )}
-              </div>
-              <div className="user-actions">
-                {user.role === 'free' && (
-                  <button
-                    onClick={() => grantPremiumAccess(user.id)}
-                    className="grant-btn"
-                  >
-                    Grant Premium
-                  </button>
-                )}
-                {user.role === 'premium' && (
-                  <button
-                    onClick={() => revokePremiumAccess(user.id)}
-                    className="revoke-btn"
-                  >
-                    Revoke Premium
-                  </button>
-                )}
+            <div key={user.id} className="card-premium p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-gray-300"><span className="text-white font-semibold">Email:</span> {user.email}</p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Phone:</span> {user.phone}</p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Role:</span> 
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
+                      user.role === 'premium' ? 'badge-premium' : 
+                      user.role === 'admin' ? 'bg-red-900/50 text-red-300 border border-red-500/30' :
+                      'bg-gray-800/50 text-gray-300 border border-gray-600/30'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </p>
+                  <p className="text-gray-300"><span className="text-white font-semibold">Status:</span> 
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
+                      user.status === 'active' ? 'bg-green-900/50 text-green-300 border border-green-500/30' :
+                      user.status === 'pending' ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-500/30' :
+                      'bg-red-900/50 text-red-300 border border-red-500/30'
+                    }`}>
+                      {user.status}
+                    </span>
+                  </p>
+                  {user.premiumUntil && (
+                    <p className="text-gray-300"><span className="text-white font-semibold">Premium Until:</span> {new Date(user.premiumUntil).toLocaleDateString()}</p>
+                  )}
+                </div>
+                <div className="flex flex-col space-y-3">
+                  {user.role === 'free' && (
+                    <button
+                      onClick={() => grantPremiumAccess(user.id)}
+                      className="btn-premium"
+                    >
+                      Grant Premium
+                    </button>
+                  )}
+                  {user.role === 'premium' && (
+                    <button
+                      onClick={() => revokePremiumAccess(user.id)}
+                      className="px-4 py-2 text-white border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
+                    >
+                      Revoke Premium
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
+          {users.length === 0 && (
+            <div className="text-center text-gray-300 py-8">
+              <p>No users found</p>
+            </div>
+          )}
         </div>
       )}
     </div>

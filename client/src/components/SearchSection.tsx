@@ -54,7 +54,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           <Input
             type="text"
             placeholder="Event Title, Keywords, Company..."
-            className="pl-12 pr-4 py-4 text-lg rounded-lg input-premium"
+            className="pl-12 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70"
             value={query}
             onChange={e => setQuery(e.target.value)}
             aria-label="Search events"

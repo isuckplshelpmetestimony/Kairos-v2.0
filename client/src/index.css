@@ -87,7 +87,7 @@ body {
 
 /* Premium Input Styles */
 .input-premium {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   color: var(--text-primary);
@@ -102,7 +102,8 @@ body {
 }
 
 .input-premium::placeholder {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
 
 /* Premium Badge Styles */
