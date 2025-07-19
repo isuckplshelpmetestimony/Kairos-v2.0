@@ -71,17 +71,20 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
         </span>
       </div>
       
-      <div className="mt-auto pt-3">
-        <a
-          href={event.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block gradient-text hover:underline text-sm font-medium transition-colors"
-          aria-label="View event details"
-        >
-          View Details →
-        </a>
-      </div>
+      {/* Only show "View Details" link for non-blurred events */}
+      {!blurred && (
+        <div className="mt-auto pt-3">
+          <a
+            href={event.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block gradient-text hover:underline text-sm font-medium transition-colors"
+            aria-label="View event details"
+          >
+            View Details →
+          </a>
+        </div>
+      )}
     </div>
   );
 }

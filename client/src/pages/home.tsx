@@ -43,13 +43,17 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   };
 
   function showEventDetails(eventId: string) {
-    alert('Show event details for event ID: ' + eventId);
+    // For premium users, they can access the event details
+    // This could open a modal or navigate to a details page
+    console.log('Premium user accessing event:', eventId);
+    // TODO: Implement proper event details view for premium users
   }
 
   function handlePremiumClick(eventId: string) {
     if (hasFullAccess(user.email, user.phone, premiumUsers)) {
       showEventDetails(eventId);
     } else {
+      // Unpaid users go directly to payment wall - no event details revealed
       setShowPaymentModal(true);
     }
   }
