@@ -84,16 +84,12 @@ Kairos-v2.0/
 
 This project is designed to be easily customizable for different use cases. Here's how to adapt it:
 
-#### 1. **Change the Domain/Branding**
+#### 1. **Backend Integration**
 
-**Frontend Changes:**
-- Update `client/src/App.tsx` - Change "Kairos v2.0" to your brand name
-- Update `client/src/pages/home.tsx` - Modify the main heading and description
-- Update `client/src/components/Header.tsx` - Change the header branding
-
-**Backend Changes:**
-- Update API endpoints in `server/routes.ts` if needed
+**API Endpoints:**
+- Use the existing API endpoints in `server/routes.ts` for your data
 - Modify database schema in `shared/schema.ts` for your data structure
+- The backend is production-ready and handles authentication, events, and user management
 
 #### 2. **Customize Event Categories**
 
@@ -127,16 +123,17 @@ This project is designed to be easily customizable for different use cases. Here
 - `server/routes/auth.js` - Customize authentication
 - `server/routes/users.js` - Modify user management
 
-#### 5. **Styling and UI**
+#### 5. **Core Functionality**
 
-**Theme:**
-- `client/tailwind.config.ts` - Customize colors and styling
-- `client/src/index.css` - Modify global styles
-- `client/src/components/ui/` - Update component styles
+**Search & Filtering:**
+- `client/src/lib/eventFilters.ts` - Core filtering logic
+- `client/src/lib/dataMapper.ts` - Data mapping utilities
+- `client/src/components/SearchSection.tsx` - Search interface logic
 
-**Layout:**
-- `client/src/components/EventCard.tsx` - Modify event card layout
-- `client/src/components/SearchSection.tsx` - Adjust search interface
+**Freemium Model:**
+- `client/src/components/FeaturedEvents.tsx` - Blurring logic for free users
+- `client/src/components/SearchResults.tsx` - Conditional event visibility
+- `client/src/lib/authUtils.ts` - Premium user detection
 
 ## 📊 Key Features
 

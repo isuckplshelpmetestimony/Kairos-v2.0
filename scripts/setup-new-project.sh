@@ -8,9 +8,8 @@ echo "=================================="
 
 # Get project name
 read -p "Enter your new project name: " PROJECT_NAME
-read -p "Enter your brand name: " BRAND_NAME
-read -p "Enter your main heading: " MAIN_HEADING
-read -p "Enter your description: " DESCRIPTION
+read -p "Enter your database name: " DB_NAME
+read -p "Enter your main data type (events, businesses, conferences): " DATA_TYPE
 
 echo ""
 echo "📝 Setting up $PROJECT_NAME..."
@@ -43,15 +42,14 @@ sed -i '' "s/kairos-v2-0/$PROJECT_NAME/g" client/package.json
 # Update server package.json
 sed -i '' "s/rest-express/$PROJECT_NAME-server/g" server/package.json
 
-# Update main branding
-echo "🎨 Updating branding..."
-sed -i '' "s/Kairos v2.0/$BRAND_NAME/g" client/src/App.tsx
-sed -i '' "s/Discover Business Events for Strategic Networking/$MAIN_HEADING/g" client/src/pages/home.tsx
-sed -i '' "s/Find networking opportunities where your target clients attend in the Philippines/$DESCRIPTION/g" client/src/pages/home.tsx
+# Update database configuration
+echo "🗄️ Updating database configuration..."
+sed -i '' "s/neondb/$DB_NAME/g" .env
+sed -i '' "s/events/$DATA_TYPE/g" shared/schema.ts
 
 # Update README
 echo "📖 Updating README..."
-sed -i '' "s/Kairos v2.0/$BRAND_NAME/g" README.md
+sed -i '' "s/Kairos v2.0/$PROJECT_NAME/g" README.md
 sed -i '' "s/isuckplshelpmetestimony\/Kairos-v2.0/your-username\/$PROJECT_NAME/g" README.md
 
 # Create .gitignore
@@ -135,6 +133,6 @@ echo "5. Update .env with your database credentials"
 echo "6. npm run dev (in server directory)"
 echo "7. npm run dev (in client directory)"
 echo ""
-echo "🎉 Your $BRAND_NAME project is ready!"
+echo "🎉 Your $PROJECT_NAME backend is ready!"
 echo ""
 echo "📚 Check CUSTOMIZATION_GUIDE.md for detailed customization instructions" 

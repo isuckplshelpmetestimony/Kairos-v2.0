@@ -4,11 +4,11 @@ This guide will help you adapt Kairos v2.0 for your own business event discovery
 
 ## 🎯 Quick Customization Checklist
 
-### 1. **Branding & Domain Changes**
-- [ ] Change "Kairos v2.0" to your brand name
-- [ ] Update main heading and description
-- [ ] Modify color scheme and styling
-- [ ] Update favicon and logos
+### 1. **Backend Integration**
+- [ ] Set up PostgreSQL database
+- [ ] Configure environment variables
+- [ ] Test API endpoints
+- [ ] Import your event data
 
 ### 2. **Event Categories**
 - [ ] Customize industry categories
@@ -29,43 +29,36 @@ This guide will help you adapt Kairos v2.0 for your own business event discovery
 
 ## 🔧 Detailed Customization Steps
 
-### **Step 1: Change Branding**
+### **Step 1: Backend Integration**
 
-#### Frontend Branding Changes:
+#### Database Setup:
 
-**1. Main App Title**
-```typescript
-// client/src/App.tsx
-<h1>Your Brand Name</h1> // Change from "Kairos v2.0"
+**1. Configure Database**
+```bash
+# Set up PostgreSQL database (Neon recommended)
+# Update .env with your DATABASE_URL
+DATABASE_URL=your_postgresql_connection_string
 ```
 
-**2. Homepage Heading**
-```typescript
-// client/src/pages/home.tsx
-<h1 className="text-5xl font-bold text-slate-900 mb-4">
-  Your Custom Heading Here
-</h1>
-<p className="text-lg text-slate-600 mb-12">
-  Your custom description here
-</p>
+**2. Run Migrations**
+```bash
+cd server
+npm run db:migrate
 ```
 
-**3. Color Scheme**
+**3. Test API Endpoints**
+```bash
+# Test the events endpoint
+curl http://localhost:5002/api/events
+
+# Test with filters
+curl "http://localhost:5002/api/events?industry=Technology"
+```
+
+**4. Import Your Data**
 ```typescript
-// client/tailwind.config.ts
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          // Your brand colors
-          500: '#your-color',
-          600: '#your-color',
-        }
-      }
-    }
-  }
-}
+// Use the existing CSV parser or create your own
+// client/src/lib/csvParser.ts - Modify for your data format
 ```
 
 ### **Step 2: Customize Event Categories**
@@ -180,29 +173,40 @@ export interface Event {
 }
 ```
 
-### **Step 5: Customize UI Components**
+### **Step 5: Core Functionality Integration**
 
-#### Event Card Layout:
+#### Search & Filtering Logic:
 ```typescript
-// client/src/components/EventCard.tsx
-// Modify the card layout to show your custom fields
-<div className="mb-2">
-  <span className="block text-xs text-gray-400">Your Custom Field:</span>
-  <span className="text-sm">{event.customField}</span>
-</div>
+// client/src/lib/eventFilters.ts
+// Core filtering logic - adapt for your data structure
+export function filterEvents(events: Event[], filters: SearchFilters): Event[] {
+  return events.filter(event => {
+    // Your custom filtering logic here
+    const matchesQuery = !filters.query || 
+      event.eventName.toLowerCase().includes(filters.query.toLowerCase());
+    
+    const matchesIndustry = filters.industry === 'All industries' || 
+      event.primaryIndustry === filters.industry;
+    
+    return matchesQuery && matchesIndustry;
+  });
+}
 ```
 
-#### Search Interface:
+#### Freemium Model Logic:
 ```typescript
-// client/src/components/SearchSection.tsx
-// Add custom search fields
-<Input
-  type="text"
-  placeholder="Your custom search placeholder"
-  className="pl-12 pr-4 py-4 text-lg rounded-xl"
-  value={customField}
-  onChange={e => setCustomField(e.target.value)}
-/>
+// client/src/lib/authUtils.ts
+// Premium user detection - customize for your user system
+export const hasFullAccess = (
+  userEmail: string,
+  userPhone: string,
+  premiumUsers: PremiumUser[] = []
+): boolean => {
+  // Your premium user logic here
+  return premiumUsers.some(user =>
+    user.email === userEmail && user.status === 'active'
+  );
+};
 ```
 
 ---
@@ -233,24 +237,24 @@ PORT=5002
 ## 📋 Common Use Cases
 
 ### **Event Discovery Platform**
-- Keep current structure
-- Add event registration features
-- Include event management dashboard
+- Use the existing search and filtering system
+- Adapt the event data structure for your events
+- Integrate the freemium model for monetization
 
 ### **Networking Platform**
-- Add user profiles
-- Include messaging features
-- Add event RSVP functionality
+- Use the user authentication system
+- Adapt the event structure for networking events
+- Integrate the premium user logic
 
 ### **Business Directory**
-- Add company profiles
-- Include contact information
-- Add review/rating system
+- Use the search and filtering for business listings
+- Adapt the data structure for company profiles
+- Use the freemium model for premium listings
 
 ### **Conference Management**
-- Add speaker profiles
-- Include session scheduling
-- Add ticket management
+- Use the event structure for conference sessions
+- Adapt the filtering for different session types
+- Integrate the premium access for VIP sessions
 
 ---
 
