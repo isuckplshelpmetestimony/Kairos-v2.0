@@ -25,9 +25,9 @@ const industries = [
 
 const newCompanyStageOptions = [
   "All categories",
-  "🚨 Needs Immediate Help",
-  "🔍 Exploring Solutions",
-  "📋 Planning Transformation"
+  "🔥 Active Challenges (problems happening now)",
+  "🔍 Exploring Solutions (aware and researching)",
+  "📋 Planning Transformation (ready to execute)"
 ];
 
 export default function SearchSection({ onSearch }: SearchSectionProps) {
