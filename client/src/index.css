@@ -61,7 +61,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -69,20 +69,23 @@
   cursor: pointer;
   pointer-events: all;
   border-radius: 8px;
+  backdrop-filter: blur(2px);
 }
 
 .premium-badge {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #8B5CF6, #3B82F6);
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
   font-weight: 600;
   margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .unlock-text {
   color: white;
   font-size: 14px;
+  opacity: 0.9;
 }
 
 /* Payment Modal Styles */

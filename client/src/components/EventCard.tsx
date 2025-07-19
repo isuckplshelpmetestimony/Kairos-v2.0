@@ -10,64 +10,76 @@ interface EventCardProps {
 }
 
 const industryColors: Record<string, string> = {
-  'Technology': 'bg-blue-100 text-blue-800',
-  'Government & Public Sector': 'bg-green-100 text-green-800',
-  'Retail & E-commerce': 'bg-orange-100 text-orange-800',
-  'Banking & Financial Services': 'bg-purple-100 text-purple-800',
+  'Technology': 'bg-blue-900/50 text-blue-300 border-blue-500/30',
+  'Government & Public Sector': 'bg-green-900/50 text-green-300 border-green-500/30',
+  'Retail & E-commerce': 'bg-orange-900/50 text-orange-300 border-orange-500/30',
+  'Banking & Financial Services': 'bg-purple-900/50 text-purple-300 border-purple-500/30',
 };
 
 export default function EventCard({ event, index, handlePremiumClick, blurred }: EventCardProps) {
   const [showPayment, setShowPayment] = React.useState(false);
+  
   function getReadinessBadgeStyle(readiness: string): string {
     switch (readiness) {
       case '🚨 Needs Immediate Help':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-900/50 text-red-300 border-red-500/30';
       case '🔍 Exploring Solutions':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30';
       case '📋 Planning Transformation':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-900/50 text-green-300 border-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-800/50 text-gray-300 border-gray-600/30';
     }
   }
+  
   return (
-    <div className={`bg-white rounded-lg shadow hover:shadow-md transition p-6 flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
+    <div className={`bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
       {blurred && (
         <div className="premium-overlay" onClick={() => handlePremiumClick && handlePremiumClick(event.id)}>
           <div className="premium-badge">Premium Event</div>
           <div className="unlock-text">Click to unlock</div>
         </div>
       )}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold" aria-label="Event name">{event.eventName}</h3>
-        <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${industryColors[event.primaryIndustry] || 'bg-gray-100 text-gray-700'}`}
+      
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-white" aria-label="Event name">
+          {event.eventName}
+        </h3>
+        <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border ${industryColors[event.primaryIndustry] || 'bg-gray-800/50 text-gray-300 border-gray-600/30'}`}
           aria-label="Industry">
           {event.primaryIndustry}
         </span>
       </div>
-      <div className="text-sm text-gray-500 mb-2" aria-label="Date and location">{event.dateLocation}</div>
-      <div className="mb-2">
-        <span className="block text-xs text-gray-400">Attendees:</span>
-        <span className="text-sm">{event.attendees}</span>
+      
+      <div className="text-sm text-gray-300 mb-3" aria-label="Date and location">
+        {event.dateLocation}
       </div>
-      <div className="mb-2">
-        <span className="block text-xs text-gray-400">Goals:</span>
-        <span className="text-sm">{event.goals}</span>
+      
+      <div className="mb-3">
+        <span className="block text-xs text-gray-400 mb-1">Attendees:</span>
+        <span className="text-sm text-white">{event.attendees}</span>
       </div>
-      <div className="flex flex-wrap gap-1 mb-2" aria-label="Company readiness">
-        <span className={`px-2 py-1 text-xs rounded ${getReadinessBadgeStyle(event.companyReadiness)}`}>
+      
+      <div className="mb-3">
+        <span className="block text-xs text-gray-400 mb-1">Goals:</span>
+        <span className="text-sm text-white">{event.goals}</span>
+      </div>
+      
+      <div className="flex flex-wrap gap-2 mb-4" aria-label="Company readiness">
+        <span className={`px-3 py-1 text-xs rounded-full border ${getReadinessBadgeStyle(event.companyReadiness)}`}>
           {event.companyReadiness}
-          </span>
+        </span>
       </div>
-      <div className="mt-auto pt-2">
+      
+      <div className="mt-auto pt-3">
         <a
           href={event.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block text-blue-600 hover:underline text-sm font-medium"
+          className="inline-block text-purple-400 hover:text-purple-300 hover:underline text-sm font-medium transition-colors"
           aria-label="View event details"
         >
-          View Details
+          View Details →
         </a>
       </div>
     </div>

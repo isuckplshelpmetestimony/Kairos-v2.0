@@ -41,36 +41,49 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
 
   if (isSubmitted) {
     return (
-      <div className="payment-success">
-        <h2>Payment Submitted!</h2>
-        <p>You'll receive access within 24 hours after payment confirmation.</p>
-        <button onClick={onClose}>Close</button>
+      <div className="payment-modal-overlay">
+        <div className="payment-modal bg-gray-900 border border-gray-700 text-white">
+          <button className="close-btn text-white" onClick={onClose}>×</button>
+          <div className="text-center py-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Payment Submitted!</h2>
+            <p className="text-gray-300">You'll receive access within 24 hours after payment confirmation.</p>
+            <button 
+              onClick={onClose}
+              className="mt-6 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="payment-modal-overlay">
-      <div className="payment-modal">
-        <button className="close-btn" onClick={onClose}>×</button>
-        <h1>🔒 Unlock Premium Events - ₱3,000</h1>
+      <div className="payment-modal bg-gray-900 border border-gray-700 text-white">
+        <button className="close-btn text-white" onClick={onClose}>×</button>
+        <h1 className="text-2xl font-bold text-white mb-6">🔒 Unlock Premium Events - ₱3,000</h1>
+        
         <div className="qr-section">
-          <h3>📱 GCash Payment</h3>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <img src="/IMG_1509.JPG" alt="GCash QR Code" className="qr-code" />
+          <h3 className="text-lg font-semibold text-white mb-4">📱 GCash Payment</h3>
+          <div className="flex justify-center">
+            <img src="/IMG_1509.JPG" alt="GCash QR Code" className="qr-code rounded-lg" />
           </div>
-          <p style={{ marginTop: '12px', fontWeight: 600, textAlign: 'center' }}>
+          <p className="mt-3 font-semibold text-center text-purple-300">
             GCash Number: 09291860540
           </p>
         </div>
-        <form onSubmit={handleSubmit}>
-          <h3>✉️ Your Contact Details:</h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h3 className="text-lg font-semibold text-white">✉️ Your Contact Details:</h3>
           <input
             type="email"
             placeholder="Your email address"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
           />
           <input
             type="tel"
@@ -78,24 +91,38 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             required
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
           />
-          <div className="subscription-info">
-            <h3>💳 Monthly Subscription: ₱3,000</h3>
-            <p>(Recurring payment required each month)</p>
+          
+          <div className="subscription-info bg-gray-800 border border-gray-600 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-white mb-2">💳 Monthly Subscription: ₱3,000</h3>
+            <p className="text-gray-300">(Recurring payment required each month)</p>
           </div>
+          
           <div className="instructions">
-            <h3>📝 Payment Instructions:</h3>
-            <ol>
-              <li>Send ₱3,000 via GCash to the number above</li>
-              <li>Fill out your contact details above</li>
-              <li>Wait for access confirmation (within 3 hours) - I will send an update through your email and phone number to notify you when your account has access to the premium events</li>
+            <h3 className="text-lg font-semibold text-white mb-3">📝 Payment Instructions:</h3>
+            <ol className="text-gray-300 space-y-2">
+              <li>1. Send ₱3,000 via GCash to the number above</li>
+              <li>2. Fill out your contact details above</li>
+              <li>3. Wait for access confirmation (within 3 hours) - I will send an update through your email and phone number to notify you when your account has access to the premium events</li>
             </ol>
           </div>
+          
           <div className="form-actions">
-            <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            <button 
+              type="submit" 
+              className="submit-btn bg-purple-600 hover:bg-purple-700 text-white" 
+              disabled={isSubmitting}
+            >
               {isSubmitting ? 'Submitting...' : 'Submit Payment Info'}
             </button>
-            <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="cancel-btn bg-gray-600 hover:bg-gray-700 text-white"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

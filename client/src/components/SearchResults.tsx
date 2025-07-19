@@ -30,15 +30,22 @@ export default function SearchResults({
     searchFilters.companyStage === 'All categories';
 
   if (isLoading) {
-    return <div className="text-center text-gray-500">Loading events...</div>;
+    return <div className="text-center text-white/60 text-lg">Loading events...</div>;
   }
   if (hasSearched && events.length === 0) {
-    return <div className="text-center text-gray-500">No events found.</div>;
+    return (
+      <div className="text-center text-white/60 text-lg py-16">
+        <p className="mb-4">No events found matching your criteria.</p>
+        <p className="text-sm">Try adjusting your search filters or keywords.</p>
+      </div>
+    );
   }
   return (
     <section className="mb-8">
       {hasSearched && (
-        <div className="mb-2 text-sm text-gray-600">{events.length} events found</div>
+        <div className="mb-6 text-sm text-white/60">
+          {events.length} event{events.length !== 1 ? 's' : ''} found
+        </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event, index) => {
