@@ -92,11 +92,8 @@ const AppContent: React.FC = () => {
 
       {/* Admin Panel Modal */}
       {showAdminPanel && isAdmin() && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <AdminPanel />
-            <button onClick={() => setShowAdminPanel(false)}>Close</button>
-          </div>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <AdminPanel onClose={() => setShowAdminPanel(false)} />
         </div>
       )}
     </div>
