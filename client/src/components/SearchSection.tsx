@@ -42,7 +42,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
 
   return (
     <form
-      className="bg-gray-900/50 backdrop-blur-sm border border-purple-400/30 rounded-xl shadow-2xl p-6 max-w-4xl mx-auto"
+      className="glass-effect p-6 max-w-4xl mx-auto"
       onSubmit={handleSearch}
     >
       <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -54,7 +54,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           <Input
             type="text"
             placeholder="Event Title, Keywords, Company..."
-            className="pl-12 pr-4 py-4 text-lg rounded-lg bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
+            className="pl-12 pr-4 py-4 text-lg rounded-lg input-premium"
             value={query}
             onChange={e => setQuery(e.target.value)}
             aria-label="Search events"
@@ -66,7 +66,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           <Select value={industry} onValueChange={setIndustry}>
             <SelectTrigger 
               aria-label="Filter by industry" 
-              className="rounded-lg h-14 text-base bg-gray-800/50 border-gray-600 text-white focus:border-purple-400 focus:ring-purple-400"
+              className="rounded-lg h-14 text-base input-premium"
             >
               <SelectValue placeholder="All industries" />
             </SelectTrigger>
@@ -85,7 +85,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
           <Select value={companyStage} onValueChange={setCompanyStage}>
             <SelectTrigger 
               aria-label="Filter by company readiness" 
-              className="rounded-lg h-14 text-base bg-gray-800/50 border-gray-600 text-white focus:border-purple-400 focus:ring-purple-400"
+              className="rounded-lg h-14 text-base input-premium"
             >
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
@@ -102,7 +102,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
         {/* Find Events Button */}
         <Button 
           type="submit" 
-          className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 bg-purple-600 hover:bg-purple-700 text-white font-medium"
+          className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
         >
           Find Events
         </Button>

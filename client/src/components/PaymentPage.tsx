@@ -42,14 +42,14 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
   if (isSubmitted) {
     return (
       <div className="payment-modal-overlay">
-        <div className="payment-modal bg-gray-900 border border-gray-700 text-white">
+        <div className="payment-modal card-premium">
           <button className="close-btn text-white" onClick={onClose}>×</button>
           <div className="text-center py-8">
             <h2 className="text-2xl font-bold text-white mb-4">Payment Submitted!</h2>
             <p className="text-gray-300">You'll receive access within 24 hours after payment confirmation.</p>
             <button 
               onClick={onClose}
-              className="mt-6 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="mt-6 px-6 py-2 btn-premium"
             >
               Close
             </button>
@@ -61,7 +61,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
 
   return (
     <div className="payment-modal-overlay">
-      <div className="payment-modal bg-gray-900 border border-gray-700 text-white">
+      <div className="payment-modal card-premium">
         <button className="close-btn text-white" onClick={onClose}>×</button>
         <h1 className="text-2xl font-bold text-white mb-6">🔒 Unlock Premium Events - ₱3,000</h1>
         
@@ -70,7 +70,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
           <div className="flex justify-center">
             <img src="/IMG_1509.JPG" alt="GCash QR Code" className="qr-code rounded-lg" />
           </div>
-          <p className="mt-3 font-semibold text-center text-purple-300">
+          <p className="mt-3 font-semibold text-center gradient-text">
             GCash Number: 09291860540
           </p>
         </div>
@@ -83,7 +83,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
+            className="w-full px-4 py-3 input-premium"
           />
           <input
             type="tel"
@@ -91,10 +91,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             required
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
+            className="w-full px-4 py-3 input-premium"
           />
           
-          <div className="subscription-info bg-gray-800 border border-gray-600 rounded-lg p-4">
+          <div className="subscription-info card-premium">
             <h3 className="text-lg font-semibold text-white mb-2">💳 Monthly Subscription: ₱3,000</h3>
             <p className="text-gray-300">(Recurring payment required each month)</p>
           </div>
@@ -111,7 +111,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
           <div className="form-actions">
             <button 
               type="submit" 
-              className="submit-btn bg-purple-600 hover:bg-purple-700 text-white" 
+              className="submit-btn btn-premium" 
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Payment Info'}
@@ -119,7 +119,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             <button 
               type="button" 
               onClick={onClose} 
-              className="cancel-btn bg-gray-600 hover:bg-gray-700 text-white"
+              className="cancel-btn px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
             >
               Cancel
             </button>

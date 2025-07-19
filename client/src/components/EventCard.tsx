@@ -10,10 +10,10 @@ interface EventCardProps {
 }
 
 const industryColors: Record<string, string> = {
-  'Technology': 'bg-blue-900/50 text-blue-300 border-blue-500/30',
-  'Government & Public Sector': 'bg-green-900/50 text-green-300 border-green-500/30',
-  'Retail & E-commerce': 'bg-orange-900/50 text-orange-300 border-orange-500/30',
-  'Banking & Financial Services': 'bg-purple-900/50 text-purple-300 border-purple-500/30',
+  'Technology': 'badge-premium',
+  'Government & Public Sector': 'badge-premium',
+  'Retail & E-commerce': 'badge-premium',
+  'Banking & Financial Services': 'badge-premium',
 };
 
 export default function EventCard({ event, index, handlePremiumClick, blurred }: EventCardProps) {
@@ -22,18 +22,18 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
   function getReadinessBadgeStyle(readiness: string): string {
     switch (readiness) {
       case '🚨 Needs Immediate Help':
-        return 'bg-red-900/50 text-red-300 border-red-500/30';
+        return 'badge-premium';
       case '🔍 Exploring Solutions':
-        return 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30';
+        return 'badge-premium';
       case '📋 Planning Transformation':
-        return 'bg-green-900/50 text-green-300 border-green-500/30';
+        return 'badge-premium';
       default:
-        return 'bg-gray-800/50 text-gray-300 border-gray-600/30';
+        return 'badge-premium';
     }
   }
   
   return (
-    <div className={`bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
+    <div className={`card-premium flex flex-col h-full relative ${blurred ? 'blurred-event' : ''}`}>
       {blurred && (
         <div className="premium-overlay" onClick={() => handlePremiumClick && handlePremiumClick(event.id)}>
           <div className="premium-badge">Premium Event</div>
@@ -45,7 +45,7 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
         <h3 className="text-lg font-semibold text-white" aria-label="Event name">
           {event.eventName}
         </h3>
-        <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border ${industryColors[event.primaryIndustry] || 'bg-gray-800/50 text-gray-300 border-gray-600/30'}`}
+        <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${industryColors[event.primaryIndustry] || 'badge-premium'}`}
           aria-label="Industry">
           {event.primaryIndustry}
         </span>
@@ -66,7 +66,7 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
       </div>
       
       <div className="flex flex-wrap gap-2 mb-4" aria-label="Company readiness">
-        <span className={`px-3 py-1 text-xs rounded-full border ${getReadinessBadgeStyle(event.companyReadiness)}`}>
+        <span className={`px-3 py-1 text-xs rounded-full ${getReadinessBadgeStyle(event.companyReadiness)}`}>
           {event.companyReadiness}
         </span>
       </div>
@@ -76,7 +76,7 @@ export default function EventCard({ event, index, handlePremiumClick, blurred }:
           href={event.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block text-purple-400 hover:text-purple-300 hover:underline text-sm font-medium transition-colors"
+          className="inline-block gradient-text hover:underline text-sm font-medium transition-colors"
           aria-label="View event details"
         >
           View Details →
