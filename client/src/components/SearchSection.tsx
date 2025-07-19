@@ -48,13 +48,10 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
       <div className="flex flex-col md:flex-row gap-4 items-center">
         {/* Search Input */}
         <div className="relative flex-1 w-full">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            <Search className="w-5 h-5" />
-          </span>
           <Input
             type="text"
             placeholder="Event Title, Keywords, Company..."
-            className="pl-12 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70"
+            className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70"
             value={query}
             onChange={e => setQuery(e.target.value)}
             aria-label="Search events"
