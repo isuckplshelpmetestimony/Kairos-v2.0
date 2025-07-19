@@ -70,7 +70,12 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
         {isLoading ? (
           <div className="text-center text-gray-500 mt-12">Loading events...</div>
         ) : hasSearched ? (
-          <SearchResults events={filteredEvents} hasSearched={hasSearched} handlePremiumClick={handlePremiumClick} />
+          <SearchResults 
+            events={filteredEvents} 
+            hasSearched={hasSearched} 
+            handlePremiumClick={handlePremiumClick}
+            searchFilters={searchFilters}
+          />
         ) : (
           <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
         )}

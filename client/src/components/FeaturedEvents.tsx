@@ -29,7 +29,7 @@ export default function FeaturedEvents({ events, setShowPaymentModal }: Featured
             event={event}
             index={index}
             handlePremiumClick={handlePremiumClick}
-            blurred={index > 0 && !hasAccess}
+            blurred={index >= 3 && !hasAccess}
           />
         ))}
       </div>
