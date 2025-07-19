@@ -56,7 +56,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
               </svg>
             </div>
             <h2 className="text-2xl font-bold gradient-text mb-4">Payment Submitted!</h2>
-            <p className="text-gray-300 mb-6">You'll receive access within 24 hours after payment confirmation.</p>
+            <p className="text-gray-300 mb-6">You'll receive access within 3 hours after payment confirmation.</p>
             <button 
               onClick={onClose}
               className="btn-premium px-8 py-3"
