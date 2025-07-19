@@ -1,5 +1,18 @@
 import { Event, SearchFilters } from './types';
 
+// Helper function to normalize readiness levels for comparison
+function normalizeReadiness(readiness: string): string {
+  const mappings: Record<string, string> = {
+    '🚨 Needs Immediate Help': '🔥 Active Challenges (problems happening now)',
+    'Needs Immediate Help': '🔥 Active Challenges (problems happening now)',
+    '🔍 Exploring Solutions': '🔍 Exploring Solutions (aware and researching)',
+    'Exploring Solutions': '🔍 Exploring Solutions (aware and researching)',
+    '📋 Planning Transformation': '📋 Planning Transformation (ready to execute)',
+    'Planning Transformation': '📋 Planning Transformation (ready to execute)'
+  };
+  return mappings[readiness] || readiness;
+}
+
 export function filterEvents(events: Event[], filters: SearchFilters): Event[] {
   return events.filter(event => {
     // Text search in event name, attendees, goals
@@ -14,7 +27,7 @@ export function filterEvents(events: Event[], filters: SearchFilters): Event[] {
 
     // Company readiness filter (replaces company stage filter)
     const matchesReadiness = filters.companyStage === 'All categories' ||
-      event.companyReadiness === filters.companyStage;
+      normalizeReadiness(event.companyReadiness) === filters.companyStage;
 
     return matchesQuery && matchesIndustry && matchesReadiness;
   });
