@@ -76,13 +76,13 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
 
           {/* Main Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            The all-in-one professional events platform for{' '}
-            <span className="gradient-text">founders</span>
+            Discover Business Events for{' '}
+            <span className="gradient-text">Strategic Networking</span>
           </h1>
 
           {/* Description */}
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Connect with professional events that count. KAIROS creates the difference with smart recommendations, premium networking opportunities, and curated experiences.
+            Find networking opportunities where your target clients attend in the Philippines
           </p>
 
           {/* Search Section */}
