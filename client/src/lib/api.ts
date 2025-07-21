@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config';
+import type { CompaniesResponse, CompanyDetailsResponse, ChatResponse } from '../../../shared/schema';
 
 interface ApiResponse<T> {
   data?: T;
@@ -94,6 +95,36 @@ class ApiClient {
     return this.request<any>('/payments/reject', {
       method: 'POST',
       body: JSON.stringify({ paymentId })
+    });
+  }
+
+  /**
+   * Fetch a paginated, filterable list of crisis companies
+   * @param params Query params: industry, crisis_category, crisis_score_min, crisis_score_max, limit, offset, sort_by, sort_order
+   */
+  async getCrisisCompanies(params: Record<string, any> = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request<CompaniesResponse>(`/crisis/companies?${query}`);
+  }
+
+  /**
+   * Fetch detailed profile for a crisis company
+   * @param companyId The company ID
+   */
+  async getCrisisCompanyDetails(companyId: number) {
+    return this.request<CompanyDetailsResponse>(`/crisis/companies/${companyId}`);
+  }
+
+  /**
+   * Send a chat message to the crisis AI for a company
+   * @param companyId The company ID
+   * @param message The user's question
+   * @param contextPreferences (optional) User context preferences
+   */
+  async postCrisisChatMessage(companyId: number, message: string, contextPreferences: Record<string, any> = {}) {
+    return this.request<ChatResponse>(`/crisis/chat/${companyId}`, {
+      method: 'POST',
+      body: JSON.stringify({ message, context_preferences: contextPreferences })
     });
   }
 }
