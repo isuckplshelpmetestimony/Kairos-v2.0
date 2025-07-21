@@ -5,11 +5,12 @@ import FeaturedEvents from "../components/FeaturedEvents";
 import SearchResults from "../components/SearchResults";
 import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
 import type { SearchFilters, Event } from "../lib/types";
-import { loadEvents, loadStartupEvents } from "../data/events";
+import { loadEvents, loadStartupEvents, loadCompanyEvents } from "../data/events";
 import { hasFullAccess } from '../lib/authUtils';
 import PaymentPage from '../components/PaymentPage';
 import SearchToggle from '../components/SearchToggle';
 import CrisisCompanyList from '../components/crisis/CrisisCompanyList';
+import CrisisCompanyCard from '../components/crisis/CrisisCompanyCard';
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -29,6 +30,11 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchMode, setSearchMode] = useState<'event' | 'company'>('event');
+  // Company search state
+  const [companyQuery, setCompanyQuery] = useState('');
+  const [companyResults, setCompanyResults] = useState<Event[]>([]);
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companyError, setCompanyError] = useState('');
 
   useEffect(() => {
     setIsLoading(true);
@@ -37,6 +43,35 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
       setIsLoading(false);
     });
   }, []);
+
+  // Load company data on toggle
+  useEffect(() => {
+    if (searchMode === 'company' && (companyResults.length === 0 || companyQuery === '')) {
+      setCompanyLoading(true);
+      setCompanyError('');
+      loadCompanyEvents()
+        .then(data => {
+          setCompanyResults(data);
+          setCompanyLoading(false);
+        })
+        .catch(() => {
+          setCompanyError('Error loading companies. Please try again later.');
+          setCompanyLoading(false);
+        });
+    }
+  }, [searchMode]);
+
+  // Filter company results on input
+  const filteredCompanies = companyQuery.trim() === ''
+    ? companyResults
+    : companyResults.filter(company => {
+        const q = companyQuery.toLowerCase();
+        return (
+          (company.eventName && company.eventName.toLowerCase().includes(q)) ||
+          (company.primaryIndustry && company.primaryIndustry.toLowerCase().includes(q)) ||
+          (company.goals && company.goals.toLowerCase().includes(q))
+        );
+      });
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
@@ -89,8 +124,36 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             onChange={setSearchMode}
             disabled={false}
           />
-          {/* Search Section */}
-          <SearchSection onSearch={handleSearch} />
+          {/* Search Section (only for event mode) */}
+          {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
+          {/* Company Intelligence: single search bar, no filters/results */}
+          {searchMode === 'company' && (
+            <form
+              className="glass-effect p-6 max-w-4xl mx-auto"
+              onSubmit={e => e.preventDefault()}
+            >
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                <div className="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    value={companyQuery}
+                    onChange={e => setCompanyQuery(e.target.value)}
+                    placeholder="Search companies, industries, or signals..."
+                    className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
+                    aria-label="Search companies"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
+                  tabIndex={-1}
+                  disabled
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Results Section */}
@@ -117,9 +180,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           )
         ) : (
           user.role === 'admin' || user.role === 'premium' ? (
-            <div className="mt-16 px-4 max-w-7xl mx-auto">
-              <CrisisCompanyList />
-            </div>
+            <></>
           ) : (
             <div className="mt-16 px-4 max-w-2xl mx-auto text-center">
               <div className="bg-black/60 rounded-xl p-8 text-white shadow-xl">
