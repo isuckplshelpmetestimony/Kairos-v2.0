@@ -25,8 +25,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
+// Combine crisisChatRoutes into crisisRoutes
+crisisRoutes.use(crisisChatRoutes);
 app.use('/api/crisis', crisisRoutes);
-app.use('/api/crisis', crisisChatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
