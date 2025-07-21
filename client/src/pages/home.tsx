@@ -5,12 +5,10 @@ import FeaturedEvents from "../components/FeaturedEvents";
 import SearchResults from "../components/SearchResults";
 import { filterEvents, getFeaturedEvents } from "../lib/eventFilters";
 import type { SearchFilters, Event } from "../lib/types";
-import { loadEvents, loadStartupEvents, loadCompanyEvents } from "../data/events";
+import { loadEvents, loadStartupEvents } from "../data/events";
 import { hasFullAccess } from '../lib/authUtils';
 import PaymentPage from '../components/PaymentPage';
 import SearchToggle from '../components/SearchToggle';
-import CrisisCompanyList from '../components/crisis/CrisisCompanyList';
-import CrisisCompanyCard from '../components/crisis/CrisisCompanyCard';
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -30,11 +28,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchMode, setSearchMode] = useState<'event' | 'company'>('event');
-  // Company search state
-  const [companyQuery, setCompanyQuery] = useState('');
-  const [companyResults, setCompanyResults] = useState<Event[]>([]);
-  const [companyLoading, setCompanyLoading] = useState(false);
-  const [companyError, setCompanyError] = useState('');
 
   useEffect(() => {
     setIsLoading(true);
@@ -43,35 +36,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
       setIsLoading(false);
     });
   }, []);
-
-  // Load company data on toggle
-  useEffect(() => {
-    if (searchMode === 'company' && (companyResults.length === 0 || companyQuery === '')) {
-      setCompanyLoading(true);
-      setCompanyError('');
-      loadCompanyEvents()
-        .then(data => {
-          setCompanyResults(data);
-          setCompanyLoading(false);
-        })
-        .catch(() => {
-          setCompanyError('Error loading companies. Please try again later.');
-          setCompanyLoading(false);
-        });
-    }
-  }, [searchMode]);
-
-  // Filter company results on input
-  const filteredCompanies = companyQuery.trim() === ''
-    ? companyResults
-    : companyResults.filter(company => {
-        const q = companyQuery.toLowerCase();
-        return (
-          (company.eventName && company.eventName.toLowerCase().includes(q)) ||
-          (company.primaryIndustry && company.primaryIndustry.toLowerCase().includes(q)) ||
-          (company.goals && company.goals.toLowerCase().includes(q))
-        );
-      });
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
@@ -136,8 +100,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
                 <div className="relative flex-1 w-full">
                   <input
                     type="text"
-                    value={companyQuery}
-                    onChange={e => setCompanyQuery(e.target.value)}
                     placeholder="Search companies, industries, or signals..."
                     className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
                     aria-label="Search companies"
