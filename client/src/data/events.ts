@@ -11,4 +11,10 @@ export async function loadStartupEvents(): Promise<Event[]> {
   const response = await fetch('/startup_events_mapped.csv');
   const csvContent = await response.text();
   return parseEventsCSV(csvContent);
+}
+
+export async function loadCompanyEvents(): Promise<Event[]> {
+  const response = await fetch('/companies_as_events.csv');
+  const csvContent = await response.text();
+  return parseEventsCSV(csvContent);
 } 

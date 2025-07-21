@@ -4,7 +4,6 @@ import AdminPanel from './components/AdminPanel';
 import Home from './pages/home';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import CrisisIntelligencePage from './pages/CrisisIntelligencePage';
 import { Route, Switch, useLocation } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -53,14 +52,6 @@ const AppContent: React.FC = () => {
                     <span className="text-gray-300 text-sm">
                       Welcome, {user.email} ({user.role})
                     </span>
-                    {isPremium && isPremium() && (
-                      <button
-                        onClick={() => setLocation('/crisis-intelligence')}
-                        className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-blue-700/30 transition-colors"
-                      >
-                        Crisis Intelligence
-                      </button>
-                    )}
                     {isAdmin() && (
                       <button 
                         onClick={() => setShowAdminPanel(true)}
@@ -113,7 +104,6 @@ const AppContent: React.FC = () => {
         )} />
         <Route path="/login" component={LoginPage} />
         <Route path="/signup" component={SignupPage} />
-        <Route path="/crisis-intelligence" component={CrisisIntelligencePage} />
       </Switch>
 
       {/* Admin Panel Modal */}
