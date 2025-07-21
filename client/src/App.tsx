@@ -4,7 +4,9 @@ import AdminPanel from './components/AdminPanel';
 import Home from './pages/home';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import CrisisIntelligencePage from './pages/CrisisIntelligencePage';
 import { Route, Switch, useLocation } from 'wouter';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const AppContent: React.FC = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -111,6 +113,7 @@ const AppContent: React.FC = () => {
         )} />
         <Route path="/login" component={LoginPage} />
         <Route path="/signup" component={SignupPage} />
+        <Route path="/crisis-intelligence" component={CrisisIntelligencePage} />
       </Switch>
 
       {/* Admin Panel Modal */}
@@ -123,10 +126,15 @@ const AppContent: React.FC = () => {
   );
 };
 
+// Create a QueryClient instance
+const queryClient = new QueryClient();
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>
     </AuthProvider>
   );
 };

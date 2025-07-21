@@ -49,6 +49,8 @@ const startServer = async () => {
     process.exit(1);
   }
 
+  console.log('JWT_SECRET at runtime:', process.env.JWT_SECRET);
+
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
   });

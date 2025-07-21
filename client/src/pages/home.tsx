@@ -8,6 +8,8 @@ import type { SearchFilters, Event } from "../lib/types";
 import { loadEvents, loadStartupEvents } from "../data/events";
 import { hasFullAccess } from '../lib/authUtils';
 import PaymentPage from '../components/PaymentPage';
+import SearchToggle from '../components/SearchToggle';
+import CrisisCompanyList from '../components/crisis/CrisisCompanyList';
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -26,6 +28,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   });
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchMode, setSearchMode] = useState<'event' | 'company'>('event');
 
   useEffect(() => {
     setIsLoading(true);
@@ -80,30 +83,57 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             Find networking opportunities where your target clients attend in the Philippines
           </p>
 
+          {/* Search Toggle */}
+          <SearchToggle
+            mode={searchMode}
+            onChange={setSearchMode}
+            disabled={false}
+          />
           {/* Search Section */}
           <SearchSection onSearch={handleSearch} />
         </div>
 
         {/* Results Section */}
-        {isLoading ? (
-          <div className="text-center text-gray-300 text-lg mt-12">Loading events...</div>
-        ) : hasSearched ? (
-          <div className="mt-16 px-4">
-            <div className="max-w-7xl mx-auto">
-              <SearchResults 
-                events={filteredEvents} 
-                hasSearched={hasSearched} 
-                handlePremiumClick={handlePremiumClick}
-                searchFilters={searchFilters}
-              />
+        {searchMode === 'event' ? (
+          isLoading ? (
+            <div className="text-center text-gray-300 text-lg mt-12">Loading events...</div>
+          ) : hasSearched ? (
+            <div className="mt-16 px-4">
+              <div className="max-w-7xl mx-auto">
+                <SearchResults 
+                  events={filteredEvents} 
+                  hasSearched={hasSearched} 
+                  handlePremiumClick={handlePremiumClick}
+                  searchFilters={searchFilters}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="mt-16 px-4">
+              <div className="max-w-7xl mx-auto">
+                <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
+              </div>
+            </div>
+          )
         ) : (
-          <div className="mt-16 px-4">
-            <div className="max-w-7xl mx-auto">
-              <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
+          user.role === 'admin' || user.role === 'premium' ? (
+            <div className="mt-16 px-4 max-w-7xl mx-auto">
+              <CrisisCompanyList />
             </div>
-          </div>
+          ) : (
+            <div className="mt-16 px-4 max-w-2xl mx-auto text-center">
+              <div className="bg-black/60 rounded-xl p-8 text-white shadow-xl">
+                <h2 className="text-2xl font-bold mb-4">Premium Access Required</h2>
+                <p className="mb-4">Upgrade to premium to access Company Intelligence features.</p>
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="btn-premium px-8 py-3 mt-2"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )
         )}
         
         {showPaymentModal && <PaymentPage onClose={() => setShowPaymentModal(false)} />}

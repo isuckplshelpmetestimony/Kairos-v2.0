@@ -44,11 +44,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const response = await apiClient.verifyToken();
         if (response.data) {
           setUser(response.data.user);
+          localStorage.setItem('kairos_user', JSON.stringify(response.data.user));
         } else {
           // Token invalid, clear localStorage
+          setUser(null);
           localStorage.removeItem('auth_token');
           localStorage.removeItem('kairos_user');
-    }
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('kairos_user');
       }
     };
     initializeAuth();
@@ -65,10 +70,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { user, token } = response.data;
         // Store token
         localStorage.setItem('auth_token', token);
-        // Store user
-        setUser(user);
-        localStorage.setItem('kairos_user', JSON.stringify(user));
-      return true;
+        // Immediately verify token with backend to get fresh user info
+        const verifyResponse = await apiClient.verifyToken();
+        if (verifyResponse.data) {
+          setUser(verifyResponse.data.user);
+          localStorage.setItem('kairos_user', JSON.stringify(verifyResponse.data.user));
+        } else {
+          setUser(user);
+          localStorage.setItem('kairos_user', JSON.stringify(user));
+        }
+        return true;
       }
       return false;
     } catch (error) {
