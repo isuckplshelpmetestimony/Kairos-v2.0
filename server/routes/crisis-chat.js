@@ -26,7 +26,16 @@ User question: ${message}
 Provide specific insights based on this data.`;
 
     const result = await model.generateContent(prompt);
-    res.json({ ai_response: result.response.text() });
+    let aiText = '';
+    if (result && result.response && typeof result.response.text === 'function') {
+      aiText = result.response.text();
+    }
+    if (!aiText) {
+      console.error('AI did not return a valid response:', result);
+      return res.status(500).json({ error: 'AI did not return a valid response' });
+    }
+    console.log('AI response:', aiText);
+    res.json({ ai_response: aiText });
 
   } catch (error) {
     console.error('Chat error:', error);
