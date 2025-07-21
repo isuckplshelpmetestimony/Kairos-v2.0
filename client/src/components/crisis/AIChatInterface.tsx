@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
 
+const SUGGESTED_PROMPTS = [
+  "Show me companies with the highest crisis score",
+  "List companies in the technology sector",
+  "Who are the decision makers at [company]?",
+  "What are the main crisis signals for [company]?",
+  "Which companies are planning transformation?",
+  "Show companies with recent layoffs or leadership changes",
+  "List companies with high financial distress"
+];
+
 export const AIChatInterface = () => {
   const [messages, setMessages] = useState<{ type: 'user' | 'ai'; content: string; id: number }[]>([]);
   const [input, setInput] = useState('');
@@ -33,11 +43,26 @@ export const AIChatInterface = () => {
     setLoading(false);
   };
 
+  const handlePromptClick = (prompt: string) => {
+    setInput(prompt);
+  };
+
   return (
     <div className="glass-card p-6 rounded-3xl">
-      <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-        <span className="gradient-text">Company Intelligence</span>
-      </h2>
+      {/* Suggested Prompts */}
+      <div className="flex flex-wrap gap-3 mb-6 justify-center">
+        {SUGGESTED_PROMPTS.map((prompt, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handlePromptClick(prompt)}
+            className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
+            style={{backdropFilter: 'blur(8px)'}}
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
 
       <div className="h-64 overflow-y-auto mb-4 flex flex-col gap-3 pr-2">
         {messages.map(msg => (
