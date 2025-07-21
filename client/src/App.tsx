@@ -10,7 +10,7 @@ const AppContent: React.FC = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [premiumUsers, setPremiumUsers] = useState<any[]>([]);
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isPremium } = useAuth();
   const [location, setLocation] = useLocation();
 
   // Check if we're on login or signup pages
@@ -51,6 +51,14 @@ const AppContent: React.FC = () => {
                     <span className="text-gray-300 text-sm">
                       Welcome, {user.email} ({user.role})
                     </span>
+                    {isPremium && isPremium() && (
+                      <button
+                        onClick={() => setLocation('/crisis-intelligence')}
+                        className="px-4 py-2 text-white border border-white/20 rounded-lg hover:bg-blue-700/30 transition-colors"
+                      >
+                        Crisis Intelligence
+                      </button>
+                    )}
                     {isAdmin() && (
                       <button 
                         onClick={() => setShowAdminPanel(true)}
