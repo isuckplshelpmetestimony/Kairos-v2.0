@@ -8,6 +8,8 @@ import { testConnection } from './database/connection.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import paymentRoutes from './routes/payments.js';
+import crisisRoutes from './routes/crisis.js';
+import crisisChatRoutes from './routes/crisis-chat.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +25,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/crisis', crisisRoutes);
+app.use('/api/crisis', crisisChatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
