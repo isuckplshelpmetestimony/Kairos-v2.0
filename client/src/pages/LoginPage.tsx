@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useLocation } from 'wouter';
 
@@ -6,8 +6,14 @@ const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      setLocation('/');
+    }
+  }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,11 +21,10 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       const success = await login(formData.email, formData.password);
-      if (success) {
-        setLocation('/');
-      } else {
+      if (!success) {
         setError('Invalid email or password');
       }
+      // Do not redirect here; let useEffect handle it when user updates
     } catch (err) {
       setError('An error occurred. Please try again.');
     } finally {
