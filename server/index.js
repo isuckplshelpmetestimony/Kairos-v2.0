@@ -25,9 +25,26 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
-// Combine crisisChatRoutes into crisisRoutes
-crisisRoutes.use(crisisChatRoutes);
+// Register crisis routes
 app.use('/api/crisis', crisisRoutes);
+app.use('/api/crisis', crisisChatRoutes);
+
+// Add this debug logging
+console.log('🔍 Registered routes:');
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) {
+    console.log(`  ${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
+  } else if (middleware.name === 'router') {
+    console.log(`  Router middleware: ${middleware.regexp}`);
+    if (middleware.handle && middleware.handle.stack) {
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          console.log(`    ${Object.keys(handler.route.methods).join(', ').toUpperCase()} ${handler.route.path}`);
+        }
+      });
+    }
+  }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -22,21 +22,39 @@ export const AIChatInterface = () => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('auth_token');
+      console.log('Token being sent:', token ? 'Present' : 'Missing');
+      
       const response = await fetch('/api/crisis/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({ message: input })
       });
 
-      const data = await response.json();
-      const aiMsg = { type: 'ai' as const, content: data.ai_response, id: Date.now() + 1 };
+      if (!response.ok) {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        throw new Error(`Server error: ${response.status} - ${text}`);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        const text = await response.text();
+        console.log('Failed to parse JSON, raw response:', text);
+        throw new Error('Failed to parse JSON response');
+      }
+
+      const aiMsg = { type: 'ai' as const, content: data.ai_response || JSON.stringify(data), id: Date.now() + 1 };
       setMessages(prev => [...prev, aiMsg]);
     } catch (error: any) {
       const errorMsg = { type: 'ai' as const, content: 'Error: ' + error.message, id: Date.now() + 1 };
       setMessages(prev => [...prev, errorMsg]);
+      console.error('Chat error:', error);
     }
     setLoading(false);
   };

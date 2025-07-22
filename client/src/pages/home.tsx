@@ -96,29 +96,29 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             (user.role === 'admin' || user.role === 'premium') ? (
               <AIChatInterface />
             ) : (
-              <form
-                className="glass-effect p-6 max-w-4xl mx-auto"
-                onSubmit={e => e.preventDefault()}
-              >
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-                  <div className="relative flex-1 w-full">
-                    <input
-                      type="text"
-                      placeholder="Search companies, industries, or signals..."
-                      className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
-                      aria-label="Search companies"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
-                    tabIndex={-1}
-                    disabled
-                  >
-                    Search
-                  </button>
+            <form
+              className="glass-effect p-6 max-w-4xl mx-auto"
+              onSubmit={e => e.preventDefault()}
+            >
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                <div className="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    placeholder="Search companies, industries, or signals..."
+                    className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
+                    aria-label="Search companies"
+                  />
                 </div>
-              </form>
+                <button
+                  type="submit"
+                  className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
+                  tabIndex={-1}
+                  disabled
+                >
+                  Search
+                </button>
+              </div>
+            </form>
             )
           )}
         </div>

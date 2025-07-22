@@ -1,7 +1,11 @@
 import sql from '../database/connection.js';
 import { requireAuth, requirePremium } from '../middleware/auth.js';
 import express from 'express';
+import crisisChatRoutes from './crisis-chat.js';
 const router = express.Router();
+
+// Mount chat routes
+router.use(crisisChatRoutes);
 
 // GET /api/crisis/companies
 router.get('/companies', requireAuth, requirePremium, async (req, res) => {
