@@ -8,12 +8,24 @@ const SUGGESTED_PROMPTS = [
   "What's the latest on Philippine Airlines?"
 ];
 
+// Update ChatMessage type to include new fields
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  followups?: any;
+  conversationStage?: any;
+  intentDetected?: any;
+}
+
 export const AIChatInterface = () => {
-  const [messages, setMessages] = useState<{ type: 'user' | 'ai'; content: string; id: number }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   // Remove welcome message on first load
   // useEffect(() => {
@@ -31,7 +43,7 @@ export const AIChatInterface = () => {
     if (!input.trim()) return;
 
     setHasInteracted(true);
-    const userMsg = { type: 'user' as const, content: input, id: Date.now() };
+    const userMsg: ChatMessage = { type: 'user', content: input, id: Date.now().toString(), timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
@@ -39,35 +51,34 @@ export const AIChatInterface = () => {
     try {
       const token = localStorage.getItem('auth_token');
       console.log('Token being sent:', token ? 'Present' : 'Missing');
-      
+      const currentMessage = input;
       const response = await fetch('/api/crisis/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ message: input })
+        body: JSON.stringify({
+          message: currentMessage,
+          session_id: sessionId
+        })
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        const text = await response.text();
-        console.log('Failed to parse JSON, raw response:', text);
-        throw new Error('Failed to parse JSON response');
-      }
+      const data = await response.json();
 
-      if (!response.ok) {
-        // If backend returned a specific error message, show it
-        const errorMsg = data && data.error ? data.error : `Server error: ${response.status}`;
-        throw new Error(errorMsg);
-      }
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: data.ai_response,
+        timestamp: new Date(),
+        followups: data.suggested_followups,
+        conversationStage: data.conversation_stage,
+        intentDetected: data.intent_detected
+      };
 
-      const aiMsg = { type: 'ai' as const, content: data.ai_response || JSON.stringify(data), id: Date.now() + 1 };
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
-      const errorMsg = { type: 'ai' as const, content: 'Error: ' + error.message, id: Date.now() + 1 };
+      const errorMsg: ChatMessage = { type: 'ai', content: 'Error: ' + error.message, id: (Date.now() + 1).toString(), timestamp: new Date() };
       setMessages(prev => [...prev, errorMsg]);
       console.error('Chat error:', error);
     }
