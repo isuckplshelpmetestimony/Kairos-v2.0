@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const SUGGESTED_PROMPTS = [
   "Show me companies with the highest crisis score",
@@ -121,7 +122,11 @@ export const AIChatInterface = () => {
               }
               style={{ wordBreak: 'break-word' }}
             >
-              {msg.content}
+              {msg.type === 'ai' ? (
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
           ))}
           {loading && <div className="text-gray-400">Kairos is thinking...</div>}
