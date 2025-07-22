@@ -1,107 +1,144 @@
-import sql from '../database/connection.js';
-import { authenticateToken, requireAuth, requirePremium } from '../middleware/auth.js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import express from 'express';
-const router = express.Router();
+const { sql } = require('../database/connection');
+const { requireAuth, requirePremium } = require('../middleware/auth');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const LocalFirecrawlService = require('../services/local-firecrawl-service');
+const EnhancedPrompts = require('../utils/enhanced-prompts');
+const ContextOptimizer = require('../utils/context-optimizer');
+const statusManager = require('../utils/status-manager');
+const express = require('express');
 
+const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-function normalize(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]/g, ' ');
-}
-
-function keywordMatch(company, keywords) {
-  const name = normalize(company.company_name);
-  const sector = normalize(company.industry_sector);
-  return keywords.some(k => name.includes(k) || sector.includes(k));
-}
-
-router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req, res) => {
-  console.log('--- /api/crisis/chat route hit ---');
+router.post('/chat', requireAuth, requirePremium, async (req, res) => {
   try {
-    const { message } = req.body;
-    console.log('[POST /api/crisis/chat] Incoming message:', message);
+    const { message, session_id } = req.body;
+    const userId = req.user.id;
+    const sessionId = session_id || `session_${Date.now()}`;
 
-    // Get company data
-    console.log('Before company data await');
-    const companies = await sql`
-      SELECT company_name, industry_sector, crisis_score, crisis_category, primary_crisis_signals
-      FROM crisis_companies
-    `;
-    console.log('After company data await, companies:', companies.length);
+    console.log(`Enhanced chat request from user ${userId}: ${message}`);
 
-    // Filtering logic
-    let filtered = [];
-    if (message && typeof message === 'string') {
-      // Split message into keywords (words longer than 2 chars)
-      const keywords = message
-        .toLowerCase()
-        .split(/[^a-z0-9]+/)
-        .filter(w => w.length > 2);
-      // 1. Try direct/partial match on company name
-      filtered = companies.filter(c => {
-        const name = normalize(c.company_name);
-        return keywords.some(k => name.includes(k));
-      });
-      // 2. If none, try keyword match on industry sector
-      if (filtered.length === 0) {
-        filtered = companies.filter(c => keywordMatch(c, keywords));
+    // Step 1: Analyze intent and decide if we need web scraping
+    statusManager.updateStatus(sessionId, '🎯 Understanding your question...', 'analyzing');
+
+    const needsWebScraping = router.shouldScrapeWeb(message);
+
+    // Step 2: Get company context
+    statusManager.updateStatus(sessionId, '📊 Gathering company intelligence...', 'analyzing');
+    const companyContext = await buildCompanyKnowledgeBase();
+
+    let webData = [];
+    if (needsWebScraping) {
+      // Step 3: Scrape web data if needed
+      statusManager.updateStatus(sessionId, '🌐 Searching latest market information...', 'searching');
+
+      const firecrawlService = new LocalFirecrawlService();
+      try {
+        webData = await firecrawlService.searchPhilippineBusinessNews(message, 3);
+      } catch (error) {
+        console.warn('Web scraping failed, continuing with company data only:', error.message);
       }
     }
-    // 3. If still none, send a random sample of 5
-    if (filtered.length === 0) {
-      filtered = companies.slice(0, 5);
-    }
 
-    // AI prompt
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `SYSTEM: You are Kairos, a professional business intelligence consultant specializing in Philippine companies. You have a warm, helpful personality - like a trusted advisor who's genuinely excited to help.
+    // Step 4: Optimize context for free Gemini
+    statusManager.updateStatus(sessionId, '🧠 Processing information...', 'reasoning');
 
-CRITICAL RULES:
-- NEVER say "Hi, I'm Kairos!" or "Hello there! I'm Kairos" in responses
-- NEVER reintroduce yourself with "I'm Kairos" or similar phrases
-- NEVER use formal greetings like "It's great to connect" or "Hello there!" in ongoing conversations
-- Start responses directly with the content - no introductions
-- Be conversational and natural, like talking to a friend
-- Only use "Hi there!" or "Hello!" for the very first greeting, then be direct
+    const optimizedContext = ContextOptimizer.optimizeForFreeGemini(companyContext, webData, message);
 
-RESPONSE STYLE:
-- For first greeting: "Hi there! I'm Kairos, and I'm excited to help you with your business intelligence needs regarding Philippine companies. How can I assist you today?"
-- For all other responses: Start directly with the answer, no introductions or formal greetings
+    // Step 5: Generate response with enhanced prompting
+    statusManager.updateStatus(sessionId, '✍️ Crafting strategic insights...', 'generating');
 
-Here's the company data you're analyzing:\n${JSON.stringify(filtered, null, 2)}\n\nUser question: ${message}\n\nRespond as Kairos. If this looks like the very first greeting (just "hello", "hi", etc.), give a warm introduction. For ALL other responses, start directly with the answer - no introductions, no "I'm Kairos", no formal greetings. Be helpful and enthusiastic, but professional.`;
+    const enhancedPrompt = EnhancedPrompts.buildContextualPrompt(message, optimizedContext, webData);
 
-    let aiText = '';
-    let result = null;
-    let aiErrorObj = null;
-    try {
-      console.log('Before AI generateContent await');
-      result = await model.generateContent(prompt);
-      console.log('After AI generateContent await');
-      if (result && result.response && typeof result.response.text === 'function') {
-        aiText = result.response.text();
-      }
-    } catch (aiError) {
-      aiErrorObj = aiError;
-      console.error('[POST /api/crisis/chat] AI error:', aiError);
-    }
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(enhancedPrompt);
+    const aiResponse = result.response.text();
 
-    if (!aiText) {
-      console.error('[POST /api/crisis/chat] AI did not return a valid response:', result);
-      // Custom error message for Gemini API overload (503)
-      if (aiErrorObj && aiErrorObj.status === 503) {
-        return res.status(503).json({ success: false, error: "Kairos is tired zzzzz... will wake up in a few minutes :))" });
-      }
-      return res.status(500).json({ success: false, error: 'AI did not return a valid response' });
-    }
-    console.log('[POST /api/crisis/chat] AI response:', aiText);
-    return res.json({ success: true, ai_response: aiText });
+    // Step 6: Generate follow-up suggestions
+    const followups = router.generateIntelligentFollowups(message, optimizedContext);
+
+    // Clear status
+    statusManager.clearStatus(sessionId);
+
+    // Save to database
+    await router.saveChatConversation(userId, message, aiResponse, sessionId);
+
+    res.json({
+      ai_response: aiResponse,
+      response_time_ms: Date.now() - (req.startTime || Date.now()),
+      suggested_followups: followups,
+      sources_used: router.extractSourcesSummary(webData),
+      session_id: sessionId
+    });
 
   } catch (error) {
-    console.error('[POST /api/crisis/chat] Chat route error:', error);
-    // Always send JSON, never let it send empty response
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+    console.error('Enhanced chat error:', error);
+    statusManager.updateStatus(req.body.session_id, '❌ Error processing request', 'error');
+    res.status(500).json({ error: 'I encountered an error processing your request. Please try again.' });
   }
 });
 
-export default router; 
+// Helper methods
+router.shouldScrapeWeb = (message) => {
+  const webIndicators = [
+    /latest|recent|current|today|this month|news/i,
+    /market trends|industry update|competitive landscape/i,
+    /what.*happening|current.*situation/i
+  ];
+
+  return webIndicators.some(pattern => pattern.test(message));
+};
+
+router.generateIntelligentFollowups = (message, context) => {
+  const baseFollowups = [
+    "What are the key risks to consider in this strategy?",
+    "How does this compare to regional market trends?",
+    "What specific metrics should I track for success?",
+    "What's the recommended timeline for implementation?",
+    "How do I prioritize these recommendations?"
+  ];
+
+  // Customize based on context
+  if (context.companies?.some(c => c.crisis_score >= 7)) {
+    baseFollowups.unshift("Which companies are in the most urgent need of help right now?");
+  }
+
+  return baseFollowups.slice(0, 3);
+};
+
+router.extractSourcesSummary = (webData) => {
+  return webData.map(item => ({
+    source: item.source,
+    title: item.data?.title || 'Unknown',
+    scraped: item.success
+  }));
+};
+
+router.saveChatConversation = async (userId, message, response, sessionId) => {
+  try {
+    await sql(
+      `INSERT INTO crisis_chat_conversations
+       (company_id, user_id, message_content, message_type, session_id)
+       VALUES (NULL, $1, $2, $3, $4)`,
+      [userId, message, 'user_question', sessionId]
+    );
+
+    await sql(
+      `INSERT INTO crisis_chat_conversations
+       (company_id, user_id, message_content, message_type, session_id)
+       VALUES (NULL, $1, $2, $3, $4)`,
+      [userId, response, 'ai_response', sessionId]
+    );
+  } catch (error) {
+    console.error('Failed to save chat conversation:', error);
+  }
+};
+
+// Placeholder for company knowledge base builder
+async function buildCompanyKnowledgeBase() {
+  // TODO: Implement actual company data retrieval logic
+  // For now, return a mock structure for compatibility
+  return { companies: [] };
+}
+
+module.exports = router; 
