@@ -86,8 +86,8 @@ class ConversationOrchestrator {
 
     // Special handling for greeting intent: short, friendly, no analysis
     if (intent.primary_intent === 'greeting') {
-      basePrompt += `\n\nThe user just greeted you. Respond with a short, friendly welcome and ask what they'd like to know about Philippine business. Do NOT provide a market overview, analysis, or company data unless asked.`;
-      basePrompt += `\nUser's current message: "${message}"\n\nRespond naturally and helpfully:`;
+      basePrompt += `\n\nThe user just greeted you. Respond as Kairos, the Philippine business consultant. Always introduce yourself as \"Kairos, your Philippine business consultant\" (never as a generic AI or language model). Give a short, friendly welcome and ask what they'd like to know about Philippine business. Do NOT provide a market overview, analysis, or company data unless asked.`;
+      basePrompt += `\nUser's current message: \"${message}\"\n\nRespond naturally and helpfully:`;
       return basePrompt;
     }
 
