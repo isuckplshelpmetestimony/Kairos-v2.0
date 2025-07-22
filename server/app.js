@@ -1,0 +1,1 @@
+console.log('✅ Conversation state management initialized'); 
