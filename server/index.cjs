@@ -30,6 +30,7 @@ app.use('/api/payments', paymentRoutes);
 // Register crisis routes
 app.use('/api/crisis', crisisRoutes);
 app.use('/api/crisis', crisisChatRoutes);
+app.use('/api/status', statusRoutes);
 
 // Add this debug logging
 console.log('🔍 Registered routes:');

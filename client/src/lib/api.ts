@@ -127,6 +127,20 @@ class ApiClient {
       body: JSON.stringify({ message, context_preferences: contextPreferences })
     });
   }
+
+  /**
+   * Proxy a request to Firecrawl via the backend
+   * @param endpoint The Firecrawl API endpoint (e.g., '/scrape')
+   * @param method HTTP method (default: 'POST')
+   * @param data Request body (default: {})
+   * @param params Query params (default: {})
+   */
+  async firecrawlProxy<T>(endpoint: string, method: string = 'POST', data: any = {}, params: any = {}) {
+    return this.request<T>('/firecrawl/proxy', {
+      method: 'POST',
+      body: JSON.stringify({ endpoint, method, data, params })
+    });
+  }
 }
 
 export const apiClient = new ApiClient(); 

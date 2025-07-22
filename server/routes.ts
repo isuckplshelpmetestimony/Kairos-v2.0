@@ -6,6 +6,7 @@ import { z } from "zod";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import paymentRoutes from "./routes/payments.js";
+import axios from "axios";
 
 const searchParamsSchema = z.object({
   query: z.string().optional(),
@@ -67,6 +68,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(event);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch event" });
+    }
+  });
+
+  // Proxy route to Firecrawl
+  app.post("/api/firecrawl/proxy", async (req, res) => {
+    try {
+      const firecrawlUrl = process.env.FIRECRAWL_URL || "http://localhost:3002";
+      const { endpoint, method = "POST", data = {}, params = {} } = req.body;
+      const url = `${firecrawlUrl}${endpoint}`;
+      const response = await axios({
+        url,
+        method,
+        data,
+        params,
+        headers: req.headers, // Forward headers (optionally filter)
+      });
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
+      res.status(error.response?.status || 500).json({
+        message: error.message,
+        details: error.response?.data || null,
+      });
     }
   });
 
