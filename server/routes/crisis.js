@@ -1,11 +1,7 @@
 import sql from '../database/connection.js';
 import { requireAuth, requirePremium } from '../middleware/auth.js';
 import express from 'express';
-import crisisChatRoutes from './crisis-chat.js';
 const router = express.Router();
-
-// Mount chat routes
-router.use(crisisChatRoutes);
 
 // GET /api/crisis/companies
 router.get('/companies', requireAuth, requirePremium, async (req, res) => {
@@ -22,7 +18,7 @@ router.get('/companies', requireAuth, requirePremium, async (req, res) => {
     } = req.query;
 
     // Build WHERE clause dynamically
-    let whereConditions = ['is_active = true'];
+    let whereConditions = [];
     let queryParams = [];
 
     if (industry) {
@@ -53,7 +49,7 @@ router.get('/companies', requireAuth, requirePremium, async (req, res) => {
     const sortDirection = validSortOrders.includes(sort_order) ? sort_order : 'desc';
 
     // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM crisis_companies WHERE ${whereClause}`;
+    const countQuery = whereClause ? `SELECT COUNT(*) as total FROM crisis_companies WHERE ${whereClause}` : `SELECT COUNT(*) as total FROM crisis_companies`;
     const countResult = await sql(countQuery, queryParams);
     const totalCount = parseInt(countResult[0].total);
 
@@ -73,7 +69,7 @@ router.get('/companies', requireAuth, requirePremium, async (req, res) => {
           WHERE cdm.company_id = cc.id
         ) as decision_maker_count
       FROM crisis_companies cc
-      WHERE ${whereClause}
+      ${whereClause ? `WHERE ${whereClause}` : ''}
       ORDER BY ${sortColumn} ${sortDirection}
       LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
     `;
