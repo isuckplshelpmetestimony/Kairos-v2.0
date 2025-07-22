@@ -73,6 +73,7 @@ Here's the company data you're analyzing:\n${JSON.stringify(filtered, null, 2)}\
 
     let aiText = '';
     let result = null;
+    let aiErrorObj = null;
     try {
       console.log('Before AI generateContent await');
       result = await model.generateContent(prompt);
@@ -81,11 +82,16 @@ Here's the company data you're analyzing:\n${JSON.stringify(filtered, null, 2)}\
         aiText = result.response.text();
       }
     } catch (aiError) {
+      aiErrorObj = aiError;
       console.error('[POST /api/crisis/chat] AI error:', aiError);
     }
 
     if (!aiText) {
       console.error('[POST /api/crisis/chat] AI did not return a valid response:', result);
+      // Custom error message for Gemini API overload (503)
+      if (aiErrorObj && aiErrorObj.status === 503) {
+        return res.status(503).json({ success: false, error: "Kairos is tired zzzzz... will wake up in a few minutes :))" });
+      }
       return res.status(500).json({ success: false, error: 'AI did not return a valid response' });
     }
     console.log('[POST /api/crisis/chat] AI response:', aiText);

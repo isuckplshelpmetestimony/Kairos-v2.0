@@ -49,12 +49,6 @@ export const AIChatInterface = () => {
         body: JSON.stringify({ message: input })
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.log('Non-JSON response:', text);
-        throw new Error(`Server error: ${response.status} - ${text}`);
-      }
-
       let data;
       try {
         data = await response.json();
@@ -62,6 +56,12 @@ export const AIChatInterface = () => {
         const text = await response.text();
         console.log('Failed to parse JSON, raw response:', text);
         throw new Error('Failed to parse JSON response');
+      }
+
+      if (!response.ok) {
+        // If backend returned a specific error message, show it
+        const errorMsg = data && data.error ? data.error : `Server error: ${response.status}`;
+        throw new Error(errorMsg);
       }
 
       const aiMsg = { type: 'ai' as const, content: data.ai_response || JSON.stringify(data), id: Date.now() + 1 };
