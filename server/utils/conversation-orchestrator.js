@@ -91,6 +91,11 @@ class ConversationOrchestrator {
       return basePrompt;
     }
 
+    // If web scraped content is present, include it in the prompt
+    if (data.webContent) {
+      basePrompt += `\n\nWEB SCRAPED CONTENT (from the latest web search or crawl):\n${data.webContent}\n`;
+    }
+
     // Add conversation context if available
     if (conversationState.memory.length > 0) {
       basePrompt += `\n\nCONVERSATION CONTEXT:\n`;

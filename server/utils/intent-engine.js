@@ -17,6 +17,13 @@ class IntentEngine {
       intent.primary_intent = this.inferFollowUpIntent(conversationState);
     }
 
+    // Web scraping intent (must come before other checks)
+    else if (this.isWebScrape(trimmedMessage)) {
+      intent.primary_intent = 'web_scrape';
+      intent.information_need = 'high';
+      intent.scope = 'broad';
+    }
+
     // Greeting detection
     else if (this.isGreeting(trimmedMessage)) {
       intent.primary_intent = 'greeting';
@@ -70,6 +77,11 @@ class IntentEngine {
     }
 
     return intent;
+  }
+
+  static isWebScrape(message) {
+    // Detects if the user is asking for web scraping, crawling, or live web data
+    return /\b(scrape|scraping|crawl|crawling|search the internet|search online|web data|live data|latest information|fetch from web|get from web|scrape the internet|scrape news|scrape for|scrape about|scrape on|scrape\b.*?\bfor|scrape\b.*?\bon|scrape\b.*?\babout)\b/i.test(message);
   }
 
   static isGreeting(message) {

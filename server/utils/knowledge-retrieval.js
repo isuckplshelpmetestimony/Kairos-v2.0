@@ -1,4 +1,5 @@
 const { sql } = require('../database/connection');
+const axios = require('axios');
 
 class KnowledgeRetrieval {
   static async fetchRelevantData(intent, strategy, conversationState) {
@@ -6,6 +7,27 @@ class KnowledgeRetrieval {
     let data = {};
 
     try {
+      // Firecrawl integration: If the user intent or message requests web scraping or live web data
+      if (intent.primary_intent === 'web_scrape' || /scrape|search the internet|web data|latest information|crawl/i.test(conversationState.memory.slice(-1)[0]?.user || '')) {
+        const lastUserMessage = conversationState.memory.slice(-1)[0]?.user || '';
+        let urlMatch = lastUserMessage.match(/https?:\/\/[\w\.-]+/);
+        let url = urlMatch ? urlMatch[0] : 'https://news.google.com';
+        try {
+          const firecrawlUrl = process.env.FIRECRAWL_URL;
+          const response = await axios.post(`${firecrawlUrl}/v1/scrape`, {
+            url,
+            formats: ['markdown', 'html']
+          });
+          if (response.data && response.data.success) {
+            data.webContent = response.data.markdown || response.data.html || response.data.text || '';
+          } else {
+            data.webContent = 'Failed to fetch live web data.';
+          }
+        } catch (err) {
+          data.webContent = 'Error fetching live web data.';
+        }
+      }
+
       // Summary stats for greetings
       if (dataNeeds === 'summary_stats') {
         data.summary = await this.getSummaryStats();
