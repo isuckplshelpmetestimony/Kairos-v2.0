@@ -2,21 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 const SUGGESTED_PROMPTS = [
-  "Show me companies with the highest crisis score",
-  "Who are the decision makers at [company]?",
-  "Which companies are planning transformation?",
-  "List companies with high financial distress"
+  "Hey Kairos, show me the companies in the most trouble",
+  "Which companies are struggling with digital transformation?",
+  "Tell me about the banking sector crisis",
+  "What's the latest on Philippine Airlines?"
 ];
 
 export const AIChatInterface = () => {
   const [messages, setMessages] = useState<{ type: 'user' | 'ai'; content: string; id: number }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Add welcome message on first load
+  useEffect(() => {
+    if (!hasInteracted && messages.length === 0) {
+      const welcomeMsg = { 
+        type: 'ai' as const, 
+        content: "Hey there! 👋 I'm Kairos, your business intelligence buddy. I've got the inside scoop on Philippine companies and their challenges. What would you like to know about today?", 
+        id: Date.now() 
+      };
+      setMessages([welcomeMsg]);
+    }
+  }, [hasInteracted, messages.length]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
+    setHasInteracted(true);
     const userMsg = { type: 'user' as const, content: input, id: Date.now() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -138,7 +152,7 @@ export const AIChatInterface = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask about companies in crisis..."
+            placeholder="Ask me anything about Philippine companies..."
             className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 text-base"
           />
           <button
