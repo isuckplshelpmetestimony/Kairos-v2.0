@@ -3,10 +3,6 @@ const connection = require('../database/connection');
 const sql = connection.sql || connection;
 const { authenticateToken, requireAuth, requirePremium } = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const LocalFirecrawlService = require('../services/local-firecrawl-service');
-const EnhancedPrompts = require('../utils/enhanced-prompts');
-const ContextOptimizer = require('../utils/context-optimizer');
-const statusManager = require('../utils/status-manager');
 const express = require('express');
 
 const router = express.Router();
@@ -22,61 +18,36 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
     console.log(`Enhanced chat request from user ${userId}: ${message}`);
 
     // Step 1: Analyze intent and decide if we need web scraping
-    statusManager.updateStatus(sessionId, '🎯 Understanding your question...', 'analyzing');
-
-    const needsWebScraping = router.shouldScrapeWeb(message);
+    // Web scraping logic removed
 
     // Step 2: Get company context
-    statusManager.updateStatus(sessionId, '📊 Gathering company intelligence...', 'analyzing');
-    const companyContext = await buildCompanyKnowledgeBase();
+    // Web scraping logic removed
 
     let webData = [];
-    if (needsWebScraping) {
-      // Step 3: Scrape web data if needed
-      statusManager.updateStatus(sessionId, '🌐 Searching latest market information...', 'searching');
+    // Web scraping logic removed
 
-      const firecrawlService = new LocalFirecrawlService();
-      try {
-        webData = await firecrawlService.searchPhilippineBusinessNews(message, 3);
-      } catch (error) {
-        console.warn('Web scraping failed, continuing with company data only:', error.message);
-      }
-    }
-
-    // Step 4: Optimize context for free Gemini
-    statusManager.updateStatus(sessionId, '🧠 Processing information...', 'reasoning');
-
-    const optimizedContext = ContextOptimizer.optimizeForFreeGemini(companyContext, webData, message);
+    // Step 4: Optimize context for free Gemini (legacy ContextOptimizer removed)
+    const optimizedContext = {}; // Placeholder, since ContextOptimizer is removed
 
     // Step 5: Generate response with enhanced prompting
-    statusManager.updateStatus(sessionId, '✍️ Crafting strategic insights...', 'generating');
-
-    const enhancedPrompt = EnhancedPrompts.buildContextualPrompt(message, optimizedContext, webData);
-
+    const enhancedPrompt = message;
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
     const result = await model.generateContent(enhancedPrompt);
     const aiResponse = result.response.text();
 
     // Step 6: Generate follow-up suggestions
-    const followups = router.generateIntelligentFollowups(message, optimizedContext);
-
-    // Clear status
-    statusManager.clearStatus(sessionId);
-
-    // Save to database
+    const followups = [];
     await router.saveChatConversation(userId, message, aiResponse, sessionId);
 
     res.json({
       ai_response: aiResponse,
       response_time_ms: Date.now() - (req.startTime || Date.now()),
       suggested_followups: followups,
-      sources_used: router.extractSourcesSummary(webData),
+      sources_used: [],
       session_id: sessionId
     });
-
   } catch (error) {
     console.error('Enhanced chat error:', error);
-    statusManager.updateStatus(req.body.session_id, '❌ Error processing request', 'error');
     res.status(500).json({ error: 'I encountered an error processing your request. Please try again.' });
   }
 });
