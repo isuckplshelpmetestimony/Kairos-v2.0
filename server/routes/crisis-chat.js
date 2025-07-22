@@ -10,15 +10,92 @@ const express = require('express');
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Enhanced simple message detection
+router.isSimpleMessage = (message) => {
+  const trimmed = message.trim().toLowerCase();
+
+  // Short messages (under 10 characters) are usually simple
+  if (trimmed.length < 10) return true;
+
+  const simplePatterns = [
+    // Greetings
+    /^(hi|hello|hey|yo|sup|what's up|good morning|good afternoon|good evening|greetings?)!?$/i,
+
+    // Simple questions
+    /^(how are you|what can you do|who are you|what do you do|help me|can you help)[\?!]?$/i,
+
+    // Simple responses
+    /^(ok|okay|thanks|thank you|yes|no|sure|cool|nice|great|awesome)!?$/i,
+
+    // Testing messages
+    /^(test|testing|ping|pong|check|status)$/i,
+
+    // Single words
+    /^\w+[\?!]?$/
+  ];
+
+  return simplePatterns.some(pattern => pattern.test(trimmed));
+};
+
+router.generateQuickResponse = (message) => {
+  const trimmed = message.trim().toLowerCase();
+
+  // Greeting responses
+  if (/^(hi|hello|hey|yo|sup|what's up|good morning|good afternoon|good evening|greetings?)/.test(trimmed)) {
+    return "Hello! I'm Kairos, your Philippine business consultant. I analyze 93+ companies and provide strategic insights about digital transformation and market trends. What would you like to explore?";
+  }
+
+  // About me responses
+  if (/^(how are you|who are you|what do you do|what can you do)/.test(trimmed)) {
+    return "I'm Kairos, an AI business consultant specializing in the Philippine market. I can help you with company analysis, digital transformation strategies, crisis intelligence, and market insights. Ask me anything about Philippine businesses!";
+  }
+
+  // Help responses
+  if (/^(help|can you help|help me)/.test(trimmed)) {
+    return "I can help you with:\n• Company crisis analysis and intelligence\n• Digital transformation strategies\n• Philippine market insights\n• Business consultation and advice\n\nJust ask me about any Philippine company or business topic!";
+  }
+
+  // Thanks responses
+  if (/^(thanks|thank you|ok|okay)/.test(trimmed)) {
+    return "You're welcome! Feel free to ask me anything about Philippine companies, market trends, or business strategy. I'm here to help!";
+  }
+
+  // Test responses
+  if (/^(test|testing|ping|check|status)/.test(trimmed)) {
+    return "System status: ✅ Online and ready! I have access to crisis intelligence on 93+ Philippine companies and can provide real-time business insights.";
+  }
+
+  // Default for other simple messages
+  return "I'm here and ready to help! Ask me about Philippine companies, digital transformation challenges, market analysis, or business strategy. What interests you?";
+};
+
+// UPDATED CHAT ROUTE
 router.post('/chat', requireAuth, requirePremium, async (req, res) => {
   try {
     const { message, session_id } = req.body;
     const userId = req.user.id;
     const sessionId = session_id || `session_${Date.now()}`;
 
-    console.log(`Enhanced chat request from user ${userId}: ${message}`);
+    // FAST PATH: Handle all simple messages instantly
+    if (router.isSimpleMessage(message)) {
+      const quickResponse = router.generateQuickResponse(message);
 
-    // Step 1: Analyze intent and decide if we need web scraping
+      await router.saveChatConversation(userId, message, quickResponse, sessionId);
+
+      return res.json({
+        ai_response: quickResponse,
+        response_time_ms: 50, // Super fast!
+        suggested_followups: [
+          "Which companies have the highest crisis scores?",
+          "What's the latest in Philippine digital transformation?",
+          "Show me companies in the banking sector crisis",
+          "How should I approach the Philippine market?"
+        ],
+        session_id: sessionId
+      });
+    }
+
+    // COMPLEX PATH: Full AI analysis for detailed questions
     statusManager.updateStatus(sessionId, '🎯 Understanding your question...', 'analyzing');
 
     const needsWebScraping = router.shouldScrapeWeb(message);

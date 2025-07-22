@@ -15,17 +15,17 @@ export const AIChatInterface = () => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Add welcome message on first load
-  useEffect(() => {
-    if (!hasInteracted && messages.length === 0) {
-      const welcomeMsg = { 
-        type: 'ai' as const, 
-        content: "Hey there! 👋 I'm Kairos, your business intelligence buddy. I've got the inside scoop on Philippine companies and their challenges. What would you like to know about today?", 
-        id: Date.now() 
-      };
-      setMessages([welcomeMsg]);
-    }
-  }, [hasInteracted, messages.length]);
+  // Remove welcome message on first load
+  // useEffect(() => {
+  //   if (!hasInteracted && messages.length === 0) {
+  //     const welcomeMsg = { 
+  //       type: 'ai' as const, 
+  //       content: "Hey there! 👋 I'm Kairos, your business intelligence buddy. I've got the inside scoop on Philippine companies and their challenges. What would you like to know about today?", 
+  //       id: Date.now() 
+  //     };
+  //     setMessages([welcomeMsg]);
+  //   }
+  // }, [hasInteracted, messages.length]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
