@@ -1,5 +1,7 @@
-const { sql } = require('../database/connection');
-const { requireAuth, requirePremium } = require('../middleware/auth');
+delete require.cache[require.resolve('../database/connection')];
+const connection = require('../database/connection');
+const sql = connection.sql || connection;
+const { authenticateToken, requireAuth, requirePremium } = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const LocalFirecrawlService = require('../services/local-firecrawl-service');
 const EnhancedPrompts = require('../utils/enhanced-prompts');
@@ -10,7 +12,8 @@ const express = require('express');
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-router.post('/chat', requireAuth, requirePremium, async (req, res) => {
+router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req, res) => {
+  console.log('req.user in chat:', req.user);
   try {
     const { message, session_id } = req.body;
     const userId = req.user.id;
@@ -50,7 +53,7 @@ router.post('/chat', requireAuth, requirePremium, async (req, res) => {
 
     const enhancedPrompt = EnhancedPrompts.buildContextualPrompt(message, optimizedContext, webData);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
     const result = await model.generateContent(enhancedPrompt);
     const aiResponse = result.response.text();
 
@@ -116,19 +119,17 @@ router.extractSourcesSummary = (webData) => {
 
 router.saveChatConversation = async (userId, message, response, sessionId) => {
   try {
-    await sql(
-      `INSERT INTO crisis_chat_conversations
-       (company_id, user_id, message_content, message_type, session_id)
-       VALUES (NULL, $1, $2, $3, $4)`,
-      [userId, message, 'user_question', sessionId]
-    );
+    await sql`
+      INSERT INTO crisis_chat_conversations
+      (company_id, user_id, message_content, message_type, session_id)
+      VALUES (NULL, ${userId}, ${message}, ${'user_question'}, ${sessionId})
+    `;
 
-    await sql(
-      `INSERT INTO crisis_chat_conversations
-       (company_id, user_id, message_content, message_type, session_id)
-       VALUES (NULL, $1, $2, $3, $4)`,
-      [userId, response, 'ai_response', sessionId]
-    );
+    await sql`
+      INSERT INTO crisis_chat_conversations
+      (company_id, user_id, message_content, message_type, session_id)
+      VALUES (NULL, ${userId}, ${response}, ${'ai_response'}, ${sessionId})
+    `;
   } catch (error) {
     console.error('Failed to save chat conversation:', error);
   }

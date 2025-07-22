@@ -1,6 +1,8 @@
-import sql from '../database/connection.js';
-import { requireAuth, requirePremium } from '../middleware/auth.js';
-import express from 'express';
+delete require.cache[require.resolve('../database/connection.js')];
+const connection = require('../database/connection.js');
+const sql = connection.sql || connection;
+const { requireAuth, requirePremium } = require('../middleware/auth.js');
+const express = require('express');
 const router = express.Router();
 
 // GET /api/crisis/companies
@@ -161,4 +163,4 @@ router.get('/companies/:id', requireAuth, requirePremium, async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

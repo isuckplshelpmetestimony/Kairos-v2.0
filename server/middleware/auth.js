@@ -1,7 +1,8 @@
-import jwt from 'jsonwebtoken';
-import sql from '../database/connection.js';
+const jwt = require('jsonwebtoken');
+const connection = require('../database/connection.js');
+const sql = connection.sql || connection;
 
-export const authenticateToken = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     console.log('Auth header:', authHeader);
@@ -46,7 +47,7 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-export const requireAdmin = (req, res, next) => {
+const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -59,22 +60,34 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
-export const requirePremium = (req, res, next) => {
+const requirePremium = (req, res, next) => {
   if (!req.user) {
+    console.log('requirePremium: req.user missing');
     return res.status(401).json({ error: 'Authentication required' });
   }
 
   // Check if user is premium or admin
   if (req.user.role !== 'premium' && req.user.role !== 'admin') {
+    console.log('requirePremium: insufficient role', req.user.role);
     return res.status(403).json({ error: 'Premium access required' });
   }
 
+  console.log('requirePremium: passed', req.user.role);
   next();
 };
 
-export const requireAuth = (req, res, next) => {
+const requireAuth = (req, res, next) => {
   if (!req.user) {
+    console.log('requireAuth: req.user missing');
     return res.status(401).json({ error: 'Authentication required' });
   }
+  console.log('requireAuth: passed', req.user.role);
   next();
+};
+
+module.exports = {
+  authenticateToken,
+  requireAdmin,
+  requirePremium,
+  requireAuth
 }; 

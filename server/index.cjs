@@ -1,19 +1,21 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { testConnection } from './database/connection.js';
+require('dotenv/config');
+console.log('DATABASE_URL at runtime:', process.env.DATABASE_URL);
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const dotenv = require('dotenv');
+const path = require('path');
+const { fileURLToPath } = require('url');
+const { testConnection } = require('./database/connection.js');
 
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
-import paymentRoutes from './routes/payments.js';
-import crisisRoutes from './routes/crisis.js';
-import crisisChatRoutes from './routes/crisis-chat.js';
+const authRoutes = require('./routes/auth.cjs');
+const userRoutes = require('./routes/users.cjs');
+const paymentRoutes = require('./routes/payments.cjs');
+const crisisRoutes = require('./routes/crisis.cjs');
+const crisisChatRoutes = require('./routes/crisis-chat.cjs');
+const statusRoutes = require('./routes/status.cjs');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// In CommonJS, __filename and __dirname are available by default.
 const app = express();
 const PORT = process.env.PORT || 3001;
 

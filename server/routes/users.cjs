@@ -1,6 +1,12 @@
-import express from 'express';
-import sql from '../database/connection.js';
-import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+"use server";
+const express = require('express');
+const connection = require('../database/connection.js');
+const sql = connection.sql || connection;
+if (typeof sql !== 'function') {
+  throw new Error('sql import in users.cjs is not a function! Check database/connection.js export and import style.');
+}
+console.log('sql type in users.cjs:', typeof sql); // Should print 'function'
+const { authenticateToken, requireAdmin } = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -103,4 +109,4 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 
