@@ -43,27 +43,15 @@ class ResponseStrategy {
   }
 
   static getGreetingStrategy(conversationState) {
-    if (conversationState.memory.length === 0) {
-      return {
-        approach: 'welcoming_new',
-        data_needed: 'summary_stats',
-        response_length: 'short',
-        prompt_style: 'friendly',
-        next_action: 'ask_about_needs',
-        include_sources: false,
-        include_followups: true
-      };
-    } else {
-      return {
-        approach: 'welcoming_returning',
-        data_needed: 'previous_context',
-        response_length: 'short',
-        prompt_style: 'contextual',
-        next_action: 'continue_or_new_topic',
-        include_sources: false,
-        include_followups: true
-      };
-    }
+    return {
+      approach: conversationState.memory.length === 0 ? 'welcoming_new' : 'welcoming_returning',
+      data_needed: 'none',
+      response_length: 'short',
+      prompt_style: 'friendly',
+      next_action: conversationState.memory.length === 0 ? 'ask_about_needs' : 'continue_or_new_topic',
+      include_sources: false,
+      include_followups: true
+    };
   }
 
   static getCompanyInquiryStrategy(intent, conversationState) {

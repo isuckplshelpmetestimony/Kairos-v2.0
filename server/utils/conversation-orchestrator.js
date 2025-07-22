@@ -9,25 +9,42 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 class ConversationOrchestrator {
   static async processMessage(message, userId, sessionId) {
     try {
-      console.log(`Processing message from user ${userId}: "${message.substring(0, 50)}..."`);
+      console.log(`🔍 DEBUG: Processing message: "${message}"`);
 
       // Step 1: Load or create conversation state
       const conversationState = await ConversationState.load(userId, sessionId);
 
       // Step 2: Understand user intent
       const intent = await IntentEngine.analyzeIntent(message, conversationState);
-      console.log(`Intent detected: ${intent.primary_intent} (${intent.information_need} need, ${intent.urgency} urgency)`);
+      console.log(`🎯 DEBUG: Intent detected:`, {
+        primary_intent: intent.primary_intent,
+        information_need: intent.information_need,
+        urgency: intent.urgency
+      });
 
       // Step 3: Select response strategy
       const strategy = ResponseStrategy.selectStrategy(intent, conversationState);
-      console.log(`Strategy selected: ${strategy.approach} approach, ${strategy.response_length} length`);
+      console.log(`📋 DEBUG: Strategy selected:`, {
+        approach: strategy.approach,
+        response_length: strategy.response_length,
+        data_needed: strategy.data_needed
+      });
 
       // Step 4: Fetch relevant data
       const relevantData = await KnowledgeRetrieval.fetchRelevantData(intent, strategy, conversationState);
-      console.log(`Data fetched: ${Object.keys(relevantData).join(', ')}`);
+      console.log(`📊 DEBUG: Data fetched:`, {
+        companies_count: relevantData.companies?.length || 0,
+        has_summary: !!relevantData.summary,
+        data_keys: Object.keys(relevantData)
+      });
 
-      // Step 5: Generate response
+      // Step 5: Before generating response
+      const prompt = this.buildPrompt(message, intent, strategy, relevantData, conversationState);
+      console.log(`✍️ DEBUG: Prompt length: ${prompt.length} characters`);
+      console.log(`✍️ DEBUG: Prompt preview: ${prompt.substring(0, 200)}...`);
+
       const response = await this.generateResponse(message, intent, strategy, relevantData, conversationState);
+      console.log(`✅ DEBUG: Response length: ${response.length} characters`);
 
       // Step 6: Generate contextual follow-ups
       const followUps = this.generateFollowUps(intent, strategy, conversationState, relevantData);
@@ -66,6 +83,13 @@ class ConversationOrchestrator {
 
   static buildPrompt(message, intent, strategy, data, conversationState) {
     let basePrompt = this.getBasePersonality();
+
+    // Special handling for greeting intent: short, friendly, no analysis
+    if (intent.primary_intent === 'greeting') {
+      basePrompt += `\n\nThe user just greeted you. Respond with a short, friendly welcome and ask what they'd like to know about Philippine business. Do NOT provide a market overview, analysis, or company data unless asked.`;
+      basePrompt += `\nUser's current message: "${message}"\n\nRespond naturally and helpfully:`;
+      return basePrompt;
+    }
 
     // Add conversation context if available
     if (conversationState.memory.length > 0) {
