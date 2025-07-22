@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const IntentEngine = require('../utils/intent-engine');
 const ConversationState = require('../utils/conversation-state');
+const ResponseStrategy = require('../utils/response-strategy');
 
 // Test function (remove after testing)
 async function testIntentEngine() {
@@ -22,6 +23,15 @@ async function testIntentEngine() {
   }
 }
 // Uncomment this line temporarily to test: testIntentEngine();
+
+// Test function (remove after testing)
+async function testResponseStrategy() {
+  const dummyState = new ConversationState(1, 'test');
+  const testIntent = { primary_intent: 'company_inquiry', urgency: 'normal', information_need: 'high' };
+  const strategy = ResponseStrategy.selectStrategy(testIntent, dummyState);
+  console.log('Strategy for company inquiry:', strategy);
+}
+// Uncomment to test: testResponseStrategy();
 
 // Everything else gets replaced with the intelligent system
 
