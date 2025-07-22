@@ -5,6 +5,7 @@ const router = express.Router();
 const IntentEngine = require('../utils/intent-engine');
 const ConversationState = require('../utils/conversation-state');
 const ResponseStrategy = require('../utils/response-strategy');
+const ConversationOrchestrator = require('../utils/conversation-orchestrator');
 
 // Test function (remove after testing)
 async function testIntentEngine() {
@@ -32,6 +33,21 @@ async function testResponseStrategy() {
   console.log('Strategy for company inquiry:', strategy);
 }
 // Uncomment to test: testResponseStrategy();
+
+// Test function (remove after testing)
+async function testOrchestrator() {
+  try {
+    const result = await ConversationOrchestrator.processMessage(
+      "Hello, I'm interested in Philippine banking companies",
+      1,
+      'test-session'
+    );
+    console.log('Orchestrator test result:', result);
+  } catch (error) {
+    console.error('Orchestrator test failed:', error);
+  }
+}
+// Uncomment to test: testOrchestrator();
 
 // Everything else gets replaced with the intelligent system
 
