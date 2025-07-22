@@ -124,7 +124,7 @@ export const AIChatInterface = () => {
               {msg.content}
             </div>
           ))}
-          {loading && <div className="text-gray-400">AI is thinking...</div>}
+          {loading && <div className="text-gray-400">Kairos is thinking?</div>}
           <div ref={chatEndRef} />
         </div>
 
