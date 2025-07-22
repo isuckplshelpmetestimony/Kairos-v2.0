@@ -6,6 +6,16 @@ const router = express.Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+function normalize(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+}
+
+function keywordMatch(company, keywords) {
+  const name = normalize(company.company_name);
+  const sector = normalize(company.industry_sector);
+  return keywords.some(k => name.includes(k) || sector.includes(k));
+}
+
 router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req, res) => {
   console.log('--- /api/crisis/chat route hit ---');
   try {
@@ -20,14 +30,32 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
     `;
     console.log('After company data await, companies:', companies.length);
 
+    // Filtering logic
+    let filtered = [];
+    if (message && typeof message === 'string') {
+      // Split message into keywords (words longer than 2 chars)
+      const keywords = message
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter(w => w.length > 2);
+      // 1. Try direct/partial match on company name
+      filtered = companies.filter(c => {
+        const name = normalize(c.company_name);
+        return keywords.some(k => name.includes(k));
+      });
+      // 2. If none, try keyword match on industry sector
+      if (filtered.length === 0) {
+        filtered = companies.filter(c => keywordMatch(c, keywords));
+      }
+    }
+    // 3. If still none, send a random sample of 5
+    if (filtered.length === 0) {
+      filtered = companies.slice(0, 5);
+    }
+
     // AI prompt
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `You are analyzing Philippine companies in crisis. Here's the data:
-${JSON.stringify(companies, null, 2)}
-
-User question: ${message}
-
-Provide specific insights based on this data.`;
+    const prompt = `You are analyzing Philippine companies in crisis. Here's the data:\n${JSON.stringify(filtered, null, 2)}\n\nUser question: ${message}\n\nProvide specific insights based on this data.`;
 
     let aiText = '';
     let result = null;
