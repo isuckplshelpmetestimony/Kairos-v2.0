@@ -1,7 +1,8 @@
 import React from 'react';
-import { Event } from '../lib/types';
-import EventCard from './EventCard';
 import { useAuth } from '../contexts/AuthContext';
+import EventCard from './EventCard';
+import { Event } from '../lib/types';
+import { config } from '../config';
 
 interface FeaturedEventsProps {
   events: Event[];
@@ -10,9 +11,14 @@ interface FeaturedEventsProps {
 
 export default function FeaturedEvents({ events, setShowPaymentModal }: FeaturedEventsProps) {
   const { isPremium } = useAuth();
-  const hasAccess = isPremium();
+  const hasAccess = isPremium() || config.DISABLE_PREMIUM_REQUIREMENTS;
 
   function handlePremiumClick(eventId: string) {
+    // If premium requirements are disabled, allow all users to access events
+    if (config.DISABLE_PREMIUM_REQUIREMENTS) {
+      console.log('Event access granted (premium requirements disabled)');
+      return;
+    }
     setShowPaymentModal(true);
   }
 

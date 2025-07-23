@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient } from '../lib/api';
+import { config } from '../config';
 
 interface User {
   id: string;
@@ -122,6 +123,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isPremium = () => {
+    // If premium requirements are disabled, treat all authenticated users as premium
+    if (config.DISABLE_PREMIUM_REQUIREMENTS && user) {
+      return true;
+    }
     return user?.role === 'premium' || user?.role === 'admin';
   };
 

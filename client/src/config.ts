@@ -1,12 +1,20 @@
-// Get the API base URL from environment variables or use defaults
-const getApiBaseUrl = () => {
-  if (import.meta.env.PROD) {
-    return 'https://kairos-v2-0.onrender.com/api';
-  }
+// Configuration for Kairos application
+export const config = {
+  // API Configuration
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   
-  // In development, use the same port as the server
-  const serverPort = import.meta.env.VITE_SERVER_PORT || '3001';
-  return `http://localhost:${serverPort}/api`;
-};
-
-export const API_BASE_URL = getApiBaseUrl(); 
+  // Feature Flags
+  DISABLE_PREMIUM_REQUIREMENTS: true, // Set to true to make all features free, false to enable paywall
+  
+  // Admin Configuration
+  ADMIN_EMAIL: 'seanmacalintal0409@gmail.com',
+  ADMIN_PHONE: '09291860540',
+  
+  // Event Configuration
+  FEATURED_EVENTS_LIMIT: 6,
+  SEARCH_RESULTS_LIMIT: 20,
+  
+  // UI Configuration
+  ANIMATION_DURATION: 300,
+  DEBOUNCE_DELAY: 500,
+}; 

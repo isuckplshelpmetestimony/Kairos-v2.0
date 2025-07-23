@@ -1,7 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { API_BASE_URL } from "../config";
+import { config } from "../config";
 
-const BASE_URL = API_BASE_URL;
+const BASE_URL = config.apiBaseUrl;
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

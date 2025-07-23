@@ -2,6 +2,10 @@ const jwt = require('jsonwebtoken');
 const connection = require('../database/connection.js');
 const sql = connection.sql || connection;
 
+// Configuration flag to disable premium requirements
+// Set to true to make all features free, false to enable paywall
+const DISABLE_PREMIUM_REQUIREMENTS = true;
+
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -64,6 +68,13 @@ const requirePremium = (req, res, next) => {
   if (!req.user) {
     console.log('requirePremium: req.user missing');
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // If premium requirements are disabled, allow all authenticated users
+  if (DISABLE_PREMIUM_REQUIREMENTS) {
+    console.log('requirePremium: bypassed due to DISABLE_PREMIUM_REQUIREMENTS flag');
+    next();
+    return;
   }
 
   // Check if user is premium or admin

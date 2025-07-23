@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { config } from '../config';
 import type { CompaniesResponse, CompanyDetailsResponse, ChatResponse } from '../../../shared/schema';
 
 interface ApiResponse<T> {
@@ -17,7 +17,7 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
         ...options,
         headers: {
           ...this.getHeaders(),

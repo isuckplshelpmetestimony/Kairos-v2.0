@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import SearchSection from "../components/SearchSection";
 import FeaturedEvents from "../components/FeaturedEvents";
 import SearchResults from "../components/SearchResults";
@@ -10,6 +11,7 @@ import { hasFullAccess } from '../lib/authUtils';
 import PaymentPage from '../components/PaymentPage';
 import SearchToggle from '../components/SearchToggle';
 import AIChatInterface from '../components/crisis/AIChatInterface';
+import { config } from '../config';
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -19,6 +21,7 @@ interface HomeProps {
 }
 
 export default function Home({ user, premiumUsers, setShowPaymentModal, showPaymentModal }: HomeProps) {
+  const { isPremium } = useAuth();
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -53,6 +56,12 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   }
 
   function handlePremiumClick(eventId: string) {
+    // If premium requirements are disabled, allow all users to access events
+    if (config.DISABLE_PREMIUM_REQUIREMENTS) {
+      showEventDetails(eventId);
+      return;
+    }
+
     // Check if user is actually premium (not just admin)
     const isPremiumUser = user.role === 'premium' || hasFullAccess(user.email, user.phone, premiumUsers);
     
@@ -93,7 +102,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
           {/* Company Intelligence: single search bar, no filters/results */}
           {searchMode === 'company' && (
-            (user.role === 'admin' || user.role === 'premium') ? (
+            (isPremium() || config.DISABLE_PREMIUM_REQUIREMENTS) ? (
               <AIChatInterface />
             ) : (
             <form
@@ -146,7 +155,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             </div>
           )
         ) : (
-          user.role === 'admin' || user.role === 'premium' ? (
+          (isPremium() || config.DISABLE_PREMIUM_REQUIREMENTS) ? (
             <></>
           ) : (
             <div className="mt-16 px-4 max-w-2xl mx-auto text-center">

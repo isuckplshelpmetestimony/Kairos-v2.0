@@ -2,6 +2,7 @@ import React from 'react';
 import { Event } from '../lib/types';
 import EventCard from './EventCard';
 import { useAuth } from '../contexts/AuthContext';
+import { config } from '../config';
 
 interface SearchResultsProps {
   events: Event[];
@@ -22,7 +23,7 @@ export default function SearchResults({
   searchFilters 
 }: SearchResultsProps) {
   const { isPremium } = useAuth();
-  const hasAccess = isPremium();
+  const hasAccess = isPremium() || config.DISABLE_PREMIUM_REQUIREMENTS;
 
   // Determine if filters are set to "All" (default state)
   const isDefaultState = searchFilters && 
