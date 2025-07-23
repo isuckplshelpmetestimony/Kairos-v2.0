@@ -456,3 +456,85 @@ body {
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* --- DESIGN SYSTEM: Core Visual Properties --- */
+
+/* Background Utility */
+.bg-app-gradient {
+  @apply bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900;
+}
+
+/* Glassmorphism Pattern */
+.component-background {
+  @apply bg-white/5;
+}
+.component-border {
+  @apply border-white/10;
+}
+.component-backdrop {
+  @apply backdrop-blur-sm;
+}
+
+/* Typography Scale */
+.mega-headline {
+  @apply text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight;
+}
+.large-headline {
+  @apply text-2xl lg:text-3xl font-bold;
+}
+.body-text {
+  @apply text-lg lg:text-xl;
+}
+.small-text {
+  @apply text-sm;
+}
+
+/* Color Palette */
+.primary-text {
+  @apply text-white;
+}
+.secondary-text {
+  @apply text-slate-300;
+}
+.muted-text {
+  @apply text-slate-400;
+}
+.gradient-text {
+  @apply bg-gradient-to-r from-indigo-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent;
+}
+
+/* Button Styles */
+.primary-button {
+  @apply px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg;
+}
+.secondary-button {
+  @apply px-6 py-2.5 text-white border border-white/20 rounded-full hover:bg-white/10 transition-all duration-200 backdrop-blur-sm;
+}
+
+/* Spacing Scale */
+.hero-padding {
+  @apply px-6 py-16 lg:py-24;
+}
+.section-padding {
+  @apply px-6 lg:px-12;
+}
+.component-padding {
+  @apply p-6;
+}
+.button-padding-sm {
+  @apply px-6 py-2.5;
+}
+.button-padding-lg {
+  @apply px-8 py-4;
+}
+
+/* Interactive Elements */
+.hover-transition {
+  @apply transition-all duration-200;
+}
+.hover-background {
+  @apply hover:bg-white/10;
+}
+.focus-outline {
+  @apply focus:outline-none;
+}
