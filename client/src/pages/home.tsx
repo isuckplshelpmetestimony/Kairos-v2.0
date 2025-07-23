@@ -161,14 +161,16 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           </div>
         </div>
 
-        {/* Docked Chatbot: only in company mode, only when inline chat is out of view */}
-        {searchMode === 'company' && showDockedChat && (
-          <div style={{position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 50}} className="flex justify-center w-full pointer-events-none">
-            <div className="w-full max-w-xl px-4 pointer-events-auto">
+        {/* Docked Chatbot: always rendered, animate in/out with opacity and scale */}
+        {searchMode === 'company' && (
+          <div style={{position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 50}} className="flex justify-center w-full">
+            <div className="w-full max-w-xl px-4">
               <form
-                className="backdrop-blur-md bg-gray-800/80 border border-gray-700 rounded-full shadow flex items-center px-4 py-2 focus-within:ring-2 focus-within:ring-purple-500 transition-colors"
+                className={`liquid-dock backdrop-blur-md bg-gray-800/80 border border-gray-700 rounded-full shadow flex items-center px-4 py-2 focus-within:ring-2 focus-within:ring-purple-500 transition-colors transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] transform-gpu
+                  ${showDockedChat ? 'opacity-100 scale-95 pointer-events-auto' : 'opacity-0 scale-100 pointer-events-none'}`}
                 onSubmit={e => { e.preventDefault(); setShowChatModal(true); }}
                 onClick={() => setShowChatModal(true)}
+                style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
               >
                 <input
                   type="text"
