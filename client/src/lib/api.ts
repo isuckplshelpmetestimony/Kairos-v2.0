@@ -15,7 +15,7 @@ class ApiClient {
     };
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T> & { status?: number }> {
     try {
       const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
         ...options,
@@ -28,10 +28,10 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        return { error: data.error || 'Request failed' };
+        return { error: data.error || 'Request failed', status: response.status };
       }
 
-      return { data };
+      return { data, status: response.status };
     } catch (error) {
       return { error: 'Network error' };
     }

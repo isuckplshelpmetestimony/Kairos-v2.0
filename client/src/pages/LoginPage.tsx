@@ -20,9 +20,11 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
     try {
-      const success = await login(formData.email, formData.password);
-      if (!success) {
+      const result = await login(formData.email, formData.password);
+      if (result === 'unauthorized') {
         setError('Invalid email or password');
+      } else if (result === false) {
+        setError('An unexpected error occurred. Please try again.');
       }
       // Do not redirect here; let useEffect handle it when user updates
     } catch (err) {

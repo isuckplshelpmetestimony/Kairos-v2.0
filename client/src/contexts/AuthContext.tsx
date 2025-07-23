@@ -14,7 +14,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean | 'unauthorized'>;
   signup: (email: string, password: string, phone: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: () => boolean;
@@ -60,11 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean | 'unauthorized'> => {
     try {
       const response = await apiClient.login(email, password);
       if (response.error) {
         console.error('Login error:', response.error);
+        if (response.status === 401) {
+          return 'unauthorized';
+        }
         return false;
       }
       if (response.data) {
