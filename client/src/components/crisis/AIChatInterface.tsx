@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 const SUGGESTED_PROMPTS = [
-  "Hey Kairos, show me the companies in the most trouble",
-  "Which companies are struggling with digital transformation?",
-  "Tell me about the banking sector crisis",
-  "What's the latest on Philippine Airlines?"
+  "Show me upcoming tech conferences in Metro Manila",
+  "What are the top networking events for startups this month?",
+  "List business expos happening in the Philippines this quarter",
+  "Find events where CEOs and business leaders are speaking"
 ];
 
 // Update ChatMessage type to include new fields
