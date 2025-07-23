@@ -124,7 +124,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
                   <div className="relative flex-1 w-full">
                     <input
                       type="text"
-                      placeholder="Search companies, industries, or signals..."
+                      placeholder="Ask me anything about business events happening..."
                       className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
                       aria-label="Search companies"
                     />
@@ -175,7 +175,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
               >
                 <input
                   type="text"
-                  placeholder="Ask me anything about Philippine companies..."
+                  placeholder="Ask me anything about business events happening..."
                   className="flex-1 bg-transparent border-none outline-none text-white text-sm px-2 py-1 placeholder-white/60 font-medium"
                   readOnly
                 />

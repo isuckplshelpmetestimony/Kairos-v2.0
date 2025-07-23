@@ -168,7 +168,7 @@ export const AIChatInterface = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask me anything about Philippine companies..."
+            placeholder="Ask me anything about business events happening..."
             className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 text-base"
           />
           <button

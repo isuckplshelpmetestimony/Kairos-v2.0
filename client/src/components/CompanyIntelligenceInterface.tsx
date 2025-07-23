@@ -37,7 +37,7 @@ const CompanyIntelligenceInterface: React.FC<CompanyIntelligenceInterfaceProps> 
       {/* Suggested questions */}
       <div className="p-6 border-b border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-colors">
+          <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-all hover:-translate-y-1 hover:shadow-lg">
             Hey Kairos, show me the companies in the most trouble
           </button>
           <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-colors">
@@ -55,7 +55,7 @@ const CompanyIntelligenceInterface: React.FC<CompanyIntelligenceInterfaceProps> 
       <div className="flex-1 p-6 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="text-center text-gray-400 mt-8">
-            <p>Ask me anything about Philippine companies...</p>
+            <p>Ask me anything about business events happening...</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -86,7 +86,7 @@ const CompanyIntelligenceInterface: React.FC<CompanyIntelligenceInterfaceProps> 
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about Philippine companies..."
+            placeholder="Ask me anything about business events happening..."
             className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
           />
           <button
