@@ -106,16 +106,15 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             mode={searchMode}
             onChange={setSearchMode}
             disabled={false}
-            labels={{ event: 'Event Search', company: 'Event Intelligence' }}
           />
           {/* Search Section (only for event mode) */}
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
           {/* Company Intelligence: single search bar, no filters/results */}
           {searchMode === 'company' && (
             (user.role === 'admin' || user.role === 'premium') ? (
-              <div ref={chatRef}><AIChatInterface /></div>
+              <div ref={chatRef} id="kairos-chatbox"><AIChatInterface /></div>
             ) : (
-            <div ref={chatRef}>
+            <div ref={chatRef} id="kairos-chatbox">
               <form
                 className="glass-effect p-6 max-w-4xl mx-auto"
                 onSubmit={e => e.preventDefault()}
@@ -169,8 +168,18 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
               <form
                 className={`liquid-dock backdrop-blur-md bg-gray-800/80 border border-gray-700 rounded-full shadow flex items-center px-4 py-2 focus-within:ring-2 focus-within:ring-purple-500 transition-colors transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] transform-gpu
                   ${showDockedChat ? 'opacity-100 scale-95 pointer-events-auto' : 'opacity-0 scale-100 pointer-events-none'}`}
-                onSubmit={e => { e.preventDefault(); setShowChatModal(true); }}
-                onClick={() => setShowChatModal(true)}
+                onSubmit={e => { e.preventDefault();
+                  const chatbox = document.getElementById('kairos-chatbox');
+                  if (chatbox) {
+                    chatbox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                onClick={() => {
+                  const chatbox = document.getElementById('kairos-chatbox');
+                  if (chatbox) {
+                    chatbox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
                 style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
               >
                 <input

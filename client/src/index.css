@@ -443,6 +443,10 @@ body {
   will-change: transform, opacity, border-radius, box-shadow;
 }
 
+#kairos-chatbox {
+  scroll-margin-top: 80px;
+}
+
 @layer base {
   * {
     @apply border-border;
