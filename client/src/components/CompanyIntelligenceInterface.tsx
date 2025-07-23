@@ -37,7 +37,7 @@ const CompanyIntelligenceInterface: React.FC<CompanyIntelligenceInterfaceProps> 
       {/* Suggested questions */}
       <div className="p-6 border-b border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-all hover:-translate-y-1 hover:shadow-lg">
+          <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-colors">
             Hey Kairos, show me the companies in the most trouble
           </button>
           <button className="p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm text-left transition-colors">
