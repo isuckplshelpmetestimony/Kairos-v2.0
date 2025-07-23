@@ -10,6 +10,7 @@ import { hasFullAccess } from '../lib/authUtils';
 import PaymentPage from '../components/PaymentPage';
 import SearchToggle from '../components/SearchToggle';
 import AIChatInterface from '../components/crisis/AIChatInterface';
+import { useRef } from "react";
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -29,6 +30,9 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchMode, setSearchMode] = useState<'event' | 'company'>('event');
+  const chatRef = useRef<HTMLDivElement>(null);
+  const [showDockedChat, setShowDockedChat] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -37,6 +41,20 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
       setIsLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (searchMode !== 'company') {
+      setShowDockedChat(false);
+      return;
+    }
+    const handleScroll = () => {
+      if (!chatRef.current) return;
+      const rect = chatRef.current.getBoundingClientRect();
+      setShowDockedChat(rect.bottom < 80); // 80px from top
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [searchMode]);
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
@@ -94,74 +112,85 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           {/* Company Intelligence: single search bar, no filters/results */}
           {searchMode === 'company' && (
             (user.role === 'admin' || user.role === 'premium') ? (
-              <AIChatInterface />
+              <div ref={chatRef}><AIChatInterface /></div>
             ) : (
-            <form
-              className="glass-effect p-6 max-w-4xl mx-auto"
-              onSubmit={e => e.preventDefault()}
-            >
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-                <div className="relative flex-1 w-full">
-                  <input
-                    type="text"
-                    placeholder="Search companies, industries, or signals..."
-                    className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
-                    aria-label="Search companies"
-                  />
+            <div ref={chatRef}>
+              <form
+                className="glass-effect p-6 max-w-4xl mx-auto"
+                onSubmit={e => e.preventDefault()}
+              >
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                  <div className="relative flex-1 w-full">
+                    <input
+                      type="text"
+                      placeholder="Search companies, industries, or signals..."
+                      className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
+                      aria-label="Search companies"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
+                    tabIndex={-1}
+                    disabled
+                  >
+                    Search
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
-                  tabIndex={-1}
-                  disabled
-                >
-                  Search
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
             )
           )}
         </div>
 
-        {/* Results Section */}
-        {searchMode === 'event' ? (
-          isLoading ? (
-            <div className="text-center text-gray-300 text-lg mt-12">Loading events...</div>
-          ) : hasSearched ? (
-            <div className="mt-16 px-4">
-              <div className="max-w-7xl mx-auto">
-                <SearchResults 
-                  events={filteredEvents} 
-                  hasSearched={hasSearched} 
-                  handlePremiumClick={handlePremiumClick}
-                  searchFilters={searchFilters}
+        {/* Always show event cards below the search bar/chatbot */}
+        <div className="mt-16 px-4">
+          <div className="max-w-7xl mx-auto">
+            {isLoading ? (
+              <div className="text-center text-gray-300 text-lg">Loading events...</div>
+            ) : hasSearched ? (
+              <SearchResults 
+                events={filteredEvents} 
+                hasSearched={hasSearched} 
+                handlePremiumClick={handlePremiumClick}
+                searchFilters={searchFilters}
+              />
+            ) : (
+              <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
+            )}
+          </div>
+        </div>
+
+        {/* Docked Chatbot: only in company mode, only when inline chat is out of view */}
+        {searchMode === 'company' && showDockedChat && (
+          <div style={{position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 50}} className="flex justify-center w-full pointer-events-none">
+            <div className="w-full max-w-xl px-4 pointer-events-auto">
+              <form
+                className="bg-white/90 rounded-full shadow flex items-center px-4 py-2 border border-gray-200 focus-within:ring-2 focus-within:ring-blue-400"
+                onSubmit={e => { e.preventDefault(); setShowChatModal(true); }}
+                onClick={() => setShowChatModal(true)}
+              >
+                <input
+                  type="text"
+                  placeholder="Ask me anything about Philippine companies..."
+                  className="flex-1 bg-transparent border-none outline-none text-gray-800 text-sm px-2 py-1"
+                  readOnly
                 />
-              </div>
-            </div>
-          ) : (
-            <div className="mt-16 px-4">
-              <div className="max-w-7xl mx-auto">
-                <FeaturedEvents events={getFeaturedEvents(allEvents)} setShowPaymentModal={setShowPaymentModal} />
-              </div>
-            </div>
-          )
-        ) : (
-          user.role === 'admin' || user.role === 'premium' ? (
-            <></>
-          ) : (
-            <div className="mt-16 px-4 max-w-2xl mx-auto text-center">
-              <div className="bg-black/60 rounded-xl p-8 text-white shadow-xl">
-                <h2 className="text-2xl font-bold mb-4">Premium Access Required</h2>
-                <p className="mb-4">Upgrade to premium to access Company Intelligence features.</p>
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  className="btn-premium px-8 py-3 mt-2"
-                >
-                  Upgrade Now
+                <button type="submit" className="ml-2 text-blue-600 hover:text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </button>
-              </div>
+              </form>
             </div>
-          )
+          </div>
+        )}
+        {/* Modal for full AIChatInterface */}
+        {showChatModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowChatModal(false)}>
+            <div className="bg-gray-900 rounded-2xl p-6 max-w-2xl w-full shadow-xl relative" onClick={e => e.stopPropagation()}>
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-white" onClick={() => setShowChatModal(false)}>&times;</button>
+              <AIChatInterface />
+            </div>
+          </div>
         )}
         
         {showPaymentModal && <PaymentPage onClose={() => setShowPaymentModal(false)} />}
