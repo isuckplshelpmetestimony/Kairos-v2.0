@@ -24,7 +24,7 @@ const SearchToggle: React.FC<SearchToggleProps> = ({ mode, onChange, disabled })
           disabled={disabled || mode === 'company'}
           aria-pressed={mode === 'company'}
         >
-          Company Intelligence
+          Event Intelligence
         </button>
       </div>
     </div>
