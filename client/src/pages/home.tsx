@@ -106,6 +106,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             mode={searchMode}
             onChange={setSearchMode}
             disabled={false}
+            labels={{ event: 'Event Search', company: 'Event Intelligence' }}
           />
           {/* Search Section (only for event mode) */}
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
