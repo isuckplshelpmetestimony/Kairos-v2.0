@@ -92,7 +92,7 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #1a1b3a 0%, #2d2f5e 100%)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
       {/* Main Content */}
       <main className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
