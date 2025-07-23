@@ -166,17 +166,17 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           <div style={{position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 50}} className="flex justify-center w-full pointer-events-none">
             <div className="w-full max-w-xl px-4 pointer-events-auto">
               <form
-                className="bg-white/90 rounded-full shadow flex items-center px-4 py-2 border border-gray-200 focus-within:ring-2 focus-within:ring-blue-400"
+                className="backdrop-blur-md bg-gray-800/80 border border-gray-700 rounded-full shadow flex items-center px-4 py-2 focus-within:ring-2 focus-within:ring-purple-500 transition-colors"
                 onSubmit={e => { e.preventDefault(); setShowChatModal(true); }}
                 onClick={() => setShowChatModal(true)}
               >
                 <input
                   type="text"
                   placeholder="Ask me anything about Philippine companies..."
-                  className="flex-1 bg-transparent border-none outline-none text-gray-800 text-sm px-2 py-1"
+                  className="flex-1 bg-transparent border-none outline-none text-white text-sm px-2 py-1 placeholder-white/60 font-medium"
                   readOnly
                 />
-                <button type="submit" className="ml-2 text-blue-600 hover:text-blue-800">
+                <button type="submit" className="ml-2 text-purple-400 hover:text-white transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </button>
               </form>
