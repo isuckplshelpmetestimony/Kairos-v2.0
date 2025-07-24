@@ -4,6 +4,7 @@ const sql = connection.sql || connection;
 const { authenticateToken, requireAuth, requirePremium } = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const express = require('express');
+const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
 
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -18,32 +19,74 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
     console.log(`Enhanced chat request from user ${userId}: ${message}`);
 
     // Step 1: Analyze intent and decide if we need web scraping
-    // Web scraping logic removed
+    const shouldScrape = router.shouldScrapeWeb(message);
+    console.log('Should scrape web:', shouldScrape);
 
-    // Step 2: Get company context
-    // Web scraping logic removed
-
+    // Step 2: Get company context and web data if needed
     let webData = [];
-    // Web scraping logic removed
+    let contextData = {};
+    
+    if (shouldScrape) {
+      // Create a mock conversation state for the knowledge retrieval
+      const conversationState = {
+        memory: [{ user: message }],
+        context: { companies_mentioned: [] }
+      };
+      
+      // Create a mock intent object
+      const intent = {
+        primary_intent: 'web_scrape',
+        specific_companies: []
+      };
+      
+      // Create a mock strategy
+      const strategy = {
+        data_needed: 'contextual'
+      };
+      
+      try {
+        contextData = await KnowledgeRetrieval.fetchRelevantData(intent, strategy, conversationState);
+        if (contextData.webContent) {
+          webData.push({
+            source: 'Firecrawl',
+            data: { content: contextData.webContent },
+            success: true
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching web data:', error);
+      }
+    }
 
-    // Step 4: Optimize context for free Gemini (legacy ContextOptimizer removed)
-    const optimizedContext = {}; // Placeholder, since ContextOptimizer is removed
+    // Step 3: Build company knowledge base
+    const companyData = await buildCompanyKnowledgeBase();
 
-    // Step 5: Generate response with enhanced prompting
-    const enhancedPrompt = message;
+    // Step 4: Generate response with enhanced prompting
+    let enhancedPrompt = message;
+    
+    if (webData.length > 0) {
+      enhancedPrompt += `\n\nRecent web data:\n${webData.map(item => item.data.content).join('\n\n')}`;
+    }
+    
+    if (companyData.companies.length > 0) {
+      enhancedPrompt += `\n\nCompany context:\n${JSON.stringify(companyData.companies.slice(0, 3), null, 2)}`;
+    }
+
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
     const result = await model.generateContent(enhancedPrompt);
     const aiResponse = result.response.text();
 
-    // Step 6: Generate follow-up suggestions
-    const followups = [];
+    // Step 5: Generate follow-up suggestions
+    const followups = router.generateIntelligentFollowups(message, { companies: companyData.companies });
+
+    // Step 6: Save conversation
     await router.saveChatConversation(userId, message, aiResponse, sessionId);
 
     res.json({
       ai_response: aiResponse,
       response_time_ms: Date.now() - (req.startTime || Date.now()),
       suggested_followups: followups,
-      sources_used: [],
+      sources_used: router.extractSourcesSummary(webData),
       session_id: sessionId
     });
   } catch (error) {
@@ -57,7 +100,9 @@ router.shouldScrapeWeb = (message) => {
   const webIndicators = [
     /latest|recent|current|today|this month|news/i,
     /market trends|industry update|competitive landscape/i,
-    /what.*happening|current.*situation/i
+    /what.*happening|current.*situation/i,
+    /scrape.*internet|search.*internet|web.*data|live.*data/i,
+    /scrape|search the internet|web scraping|crawl/i
   ];
 
   return webIndicators.some(pattern => pattern.test(message));

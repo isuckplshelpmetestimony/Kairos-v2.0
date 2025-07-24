@@ -88,7 +88,7 @@ class KnowledgeRetrieval {
 
   static async getSummaryStats() {
     try {
-      const stats = await sql(`
+      const stats = await sql`
         SELECT
           COUNT(*) as total_companies,
           COUNT(CASE WHEN crisis_score >= 7 THEN 1 END) as high_crisis,
@@ -96,7 +96,7 @@ class KnowledgeRetrieval {
           COUNT(DISTINCT industry_sector) as industries_covered
         FROM crisis_companies
         WHERE is_active = true
-      `);
+      `;
       return stats[0];
     } catch (error) {
       console.error('Error getting summary stats:', error);
@@ -106,16 +106,18 @@ class KnowledgeRetrieval {
 
   static async getSpecificCompanies(companyNames) {
     try {
-      const placeholders = companyNames.map((_, index) => `$${index + 1}`).join(', ');
-      const companies = await sql(`
+      const namePatterns = companyNames.map(name => `%${name}%`);
+      const conditions = companyNames.map((_, i) => `cc.company_name ILIKE ${sql.unsafe(`$${i + 1}`)}`).join(' OR ');
+      
+      const companies = await sql`
         SELECT cc.*,
                cdm.full_name, cdm.job_title, cdm.email_address, cdm.decision_authority_level
         FROM crisis_companies cc
         LEFT JOIN company_decision_makers cdm ON cc.id = cdm.company_id AND cdm.is_primary_contact = true
         WHERE cc.is_active = true
-        AND (${companyNames.map((_, i) => `cc.company_name ILIKE $${i + 1}`).join(' OR ')})
+        AND (${sql.unsafe(conditions)})
         ORDER BY cc.crisis_score DESC
-      `, companyNames.map(name => `%${name}%`));
+      `;
 
       return companies;
     } catch (error) {
@@ -133,15 +135,15 @@ class KnowledgeRetrieval {
         whereClause += ' AND crisis_score >= 7';
       }
 
-      const companies = await sql(`
+      const companies = await sql`
         SELECT cc.*,
                cdm.full_name, cdm.job_title, cdm.email_address
         FROM crisis_companies cc
         LEFT JOIN company_decision_makers cdm ON cc.id = cdm.company_id AND cdm.is_primary_contact = true
-        WHERE ${whereClause}
-        ORDER BY ${orderBy}
-        LIMIT $1
-      `, [limit]);
+        WHERE ${sql.unsafe(whereClause)}
+        ORDER BY ${sql.unsafe(orderBy)}
+        LIMIT ${limit}
+      `;
 
       return companies;
     } catch (error) {
@@ -152,7 +154,7 @@ class KnowledgeRetrieval {
 
   static async getCrisisCompanies() {
     try {
-      return await sql(`
+      return await sql`
         SELECT cc.*,
                cdm.full_name, cdm.job_title, cdm.email_address
         FROM crisis_companies cc
@@ -160,7 +162,7 @@ class KnowledgeRetrieval {
         WHERE cc.is_active = true AND cc.crisis_score >= 6
         ORDER BY cc.crisis_score DESC
         LIMIT 15
-      `);
+      `;
     } catch (error) {
       console.error('Error getting crisis companies:', error);
       return [];
@@ -169,7 +171,7 @@ class KnowledgeRetrieval {
 
   static async getCrisisSummary() {
     try {
-      const summary = await sql(`
+      const summary = await sql`
         SELECT
           crisis_category,
           COUNT(*) as count,
@@ -179,7 +181,7 @@ class KnowledgeRetrieval {
         WHERE is_active = true AND crisis_score >= 6
         GROUP BY crisis_category
         ORDER BY avg_score DESC
-      `);
+      `;
       return summary;
     } catch (error) {
       console.error('Error getting crisis summary:', error);
@@ -189,7 +191,7 @@ class KnowledgeRetrieval {
 
   static async getMarketTrendCompanies() {
     try {
-      return await sql(`
+      return await sql`
         SELECT cc.*,
                cdm.full_name, cdm.job_title, cdm.email_address
         FROM crisis_companies cc
@@ -197,7 +199,7 @@ class KnowledgeRetrieval {
         WHERE cc.is_active = true
         ORDER BY cc.last_intelligence_update DESC
         LIMIT 12
-      `);
+      `;
     } catch (error) {
       console.error('Error getting market trend companies:', error);
       return [];
@@ -206,7 +208,7 @@ class KnowledgeRetrieval {
 
   static async getMarketSummary() {
     try {
-      return await sql(`
+      return await sql`
         SELECT
           industry_sector,
           COUNT(*) as company_count,
@@ -216,7 +218,7 @@ class KnowledgeRetrieval {
         WHERE is_active = true
         GROUP BY industry_sector
         ORDER BY avg_crisis_score DESC
-      `);
+      `;
     } catch (error) {
       console.error('Error getting market summary:', error);
       return [];
@@ -225,15 +227,17 @@ class KnowledgeRetrieval {
 
   static async getDecisionMakers(companyNames) {
     try {
-      const placeholders = companyNames.map((_, index) => `$${index + 1}`).join(', ');
-      return await sql(`
+      const namePatterns = companyNames.map(name => `%${name}%`);
+      const conditions = companyNames.map((_, i) => `cc.company_name ILIKE ${sql.unsafe(`$${i + 1}`)}`).join(' OR ');
+      
+      return await sql`
         SELECT cdm.*, cc.company_name
         FROM company_decision_makers cdm
         JOIN crisis_companies cc ON cdm.company_id = cc.id
         WHERE cc.is_active = true
-        AND (${companyNames.map((_, i) => `cc.company_name ILIKE $${i + 1}`).join(' OR ')})
+        AND (${sql.unsafe(conditions)})
         ORDER BY cdm.decision_authority_level DESC
-      `, companyNames.map(name => `%${name}%`));
+      `;
     } catch (error) {
       console.error('Error getting decision makers:', error);
       return [];

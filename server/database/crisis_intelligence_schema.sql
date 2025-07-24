@@ -58,6 +58,7 @@ CREATE TABLE crisis_chat_conversations (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   message_content TEXT NOT NULL,
   message_type VARCHAR(20) CHECK (message_type IN ('user_question', 'ai_response', 'system_notification')),
+  session_id VARCHAR(255),
   ai_context_used TEXT,
   response_time_ms INTEGER,
   user_satisfaction_rating INTEGER CHECK (user_satisfaction_rating >= 1 AND user_satisfaction_rating <= 5),
