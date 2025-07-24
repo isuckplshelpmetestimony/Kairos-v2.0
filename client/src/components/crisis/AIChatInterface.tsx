@@ -102,7 +102,7 @@ export const AIChatInterface = () => {
 
   return (
     <div className="flex justify-center items-center w-full mt-4">
-      <div className="glass-effect border border-white/10 shadow-2xl rounded-[2.5rem] p-8 max-w-3xl w-full flex flex-col" style={{ minHeight: '420px', maxHeight: '480px', height: '480px', background: 'rgba(30,32,60,0.85)', backdropFilter: 'blur(16px)' }}>
+      <div className="card-premium max-w-3xl w-full flex flex-col p-8 shadow-2xl" style={{ minHeight: '420px', maxHeight: '480px', height: '480px' }}>
         {/* Suggested Prompts - only visible at top */}
         {showPrompts && (
           <div className="flex flex-col gap-2 mb-2 justify-center items-center" style={{ marginTop: '-12px' }}>
