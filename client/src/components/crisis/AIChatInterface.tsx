@@ -105,40 +105,40 @@ export const AIChatInterface = () => {
       <div className="glass-effect border border-white/10 shadow-2xl rounded-[2.5rem] p-8 max-w-3xl w-full flex flex-col" style={{ minHeight: '420px', maxHeight: '480px', height: '480px', background: 'rgba(30,32,60,0.85)', backdropFilter: 'blur(16px)' }}>
         {/* Suggested Prompts - only visible at top */}
         {showPrompts && (
-          <div className="flex flex-col gap-2 mb-2 justify-center items-center" style={{ marginTop: '-12px' }}>
-            <div className="flex flex-row gap-3 justify-center">
-              <button
-                type="button"
-                onClick={() => handlePromptClick(SUGGESTED_PROMPTS[0])}
-                className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
+        <div className="flex flex-col gap-2 mb-2 justify-center items-center" style={{ marginTop: '-12px' }}>
+          <div className="flex flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={() => handlePromptClick(SUGGESTED_PROMPTS[0])}
+              className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
                 style={{backdropFilter: 'blur(8px)'}}>
-                {SUGGESTED_PROMPTS[0]}
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePromptClick(SUGGESTED_PROMPTS[1])}
-                className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
+              {SUGGESTED_PROMPTS[0]}
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePromptClick(SUGGESTED_PROMPTS[1])}
+              className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
                 style={{backdropFilter: 'blur(8px)'}}>
-                {SUGGESTED_PROMPTS[1]}
-              </button>
-            </div>
-            <div className="flex flex-row gap-3 justify-center">
-              <button
-                type="button"
-                onClick={() => handlePromptClick(SUGGESTED_PROMPTS[2])}
-                className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
-                style={{backdropFilter: 'blur(8px)'}}>
-                {SUGGESTED_PROMPTS[2]}
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePromptClick(SUGGESTED_PROMPTS[3])}
-                className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
-                style={{backdropFilter: 'blur(8px)'}}>
-                {SUGGESTED_PROMPTS[3]}
-              </button>
-            </div>
+              {SUGGESTED_PROMPTS[1]}
+            </button>
           </div>
+          <div className="flex flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={() => handlePromptClick(SUGGESTED_PROMPTS[2])}
+              className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
+                style={{backdropFilter: 'blur(8px)'}}>
+              {SUGGESTED_PROMPTS[2]}
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePromptClick(SUGGESTED_PROMPTS[3])}
+              className="glass-effect border border-white/10 text-white/90 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:bg-white/10 transition"
+                style={{backdropFilter: 'blur(8px)'}}>
+              {SUGGESTED_PROMPTS[3]}
+            </button>
+          </div>
+        </div>
         )}
         {/* Chat messages area - scrollable, triggers prompt visibility */}
         <div ref={chatScrollRef} onScroll={handleChatScroll} className="flex-1 overflow-y-auto mb-2 flex flex-col gap-3 pr-1" style={{ minHeight: 0 }}>
