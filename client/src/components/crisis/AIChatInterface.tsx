@@ -82,20 +82,24 @@ const AIChatInterface: React.FC = () => {
   };
 
   const handleRenameChat = (sessionId: string) => {
+    console.log('handleRenameChat called with sessionId:', sessionId);
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
+      console.log('Found session:', session);
       setEditingSessionId(sessionId);
       setEditingName(session.title);
     }
   };
 
   const handleSaveRename = () => {
+    console.log('handleSaveRename called, editingSessionId:', editingSessionId, 'editingName:', editingName);
     if (editingSessionId && editingName.trim()) {
       setSessions(prev => {
         const updated = prev.map(s => 
           s.id === editingSessionId ? { ...s, title: editingName.trim() } : s
         );
         localStorage.setItem('kairos_chat_sessions', JSON.stringify(updated));
+        console.log('Updated sessions:', updated);
         return updated;
       });
     }
@@ -104,10 +108,12 @@ const AIChatInterface: React.FC = () => {
   };
 
   const handleDeleteChat = (sessionId: string) => {
+    console.log('handleDeleteChat called with sessionId:', sessionId);
     if (sessions.length > 1) {
       setSessions(prev => {
         const updated = prev.filter(s => s.id !== sessionId);
         localStorage.setItem('kairos_chat_sessions', JSON.stringify(updated));
+        console.log('Updated sessions after delete:', updated);
         return updated;
       });
       setMessagesBySession(prev => {
@@ -124,8 +130,12 @@ const AIChatInterface: React.FC = () => {
           setActiveSessionId(remainingSessions[0].id);
         }
       }
+    } else {
+      console.log('Cannot delete last session');
     }
   };
+
+
 
   const setActiveSessionMessages = (msgs: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
     setMessagesBySession(prev => ({
@@ -192,6 +202,8 @@ const AIChatInterface: React.FC = () => {
     setShowPrompts(chatScrollRef.current.scrollTop < 8);
   };
 
+  console.log('Current sessions state:', sessions);
+
   return (
     <div className="flex justify-center items-center w-full">
       <div className={`card-premium ${sidebarOpen ? 'max-w-[90rem]' : 'max-w-4xl'} w-full flex flex-row p-0 shadow-2xl relative`} style={{ minHeight: '420px', maxHeight: '520px', height: '520px' }}>
@@ -234,15 +246,15 @@ const AIChatInterface: React.FC = () => {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto p-2">
-              {Object.entries(sessions).map(([sessionId, session]) => (
+              {sessions.map((session) => (
                 <div
-                  key={sessionId}
+                  key={session.id}
                   className={`mb-2 cursor-pointer transition-all text-sm group ${
-                    sessionId === activeSessionId ? 'badge-premium' : 'px-3 py-2 text-white/90 hover:bg-white/10 rounded-lg'
+                    session.id === activeSessionId ? 'badge-premium' : 'px-3 py-2 text-white/90 hover:bg-white/10 rounded-lg'
                   }`}
-                  onClick={() => handleSessionChange(sessionId)}
+                  onClick={() => handleSessionChange(session.id)}
                 >
-                  {editingSessionId === sessionId ? (
+                  {editingSessionId === session.id ? (
                     <input
                       ref={inputRef}
                       type="text"
@@ -259,8 +271,9 @@ const AIChatInterface: React.FC = () => {
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-100 flex items-center">
                         <button
                           onClick={(e) => {
+                            console.log('Rename button clicked for sessionId:', session.id);
                             e.stopPropagation();
-                            handleRenameChat(sessionId);
+                            handleRenameChat(session.id);
                           }}
                           className="text-white/70 hover:text-white p-1 mr-1"
                           title="Rename chat"
@@ -271,8 +284,9 @@ const AIChatInterface: React.FC = () => {
                         </button>
                         <button
                           onClick={(e) => {
+                            console.log('Delete button clicked for sessionId:', session.id);
                             e.stopPropagation();
-                            handleDeleteChat(sessionId);
+                            handleDeleteChat(session.id);
                           }}
                           className="text-white/70 hover:text-white p-1"
                           title="Delete chat"
