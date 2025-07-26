@@ -139,8 +139,22 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
       improvement: '50-60% faster (no company data)'
     });
 
+    // Add this helper function to enforce the McKinsey-style structure
+    router.formatKairosResponse = (userQuery, rawResponse) => {
+      // Ensure response follows the structured format
+      if (!rawResponse.includes('## Executive Summary') &&
+          !rawResponse.includes('**Executive Summary**')) {
+
+        return `## Executive Summary\n${rawResponse.substring(0, 300)}...\n\n## Detailed Analysis\n${rawResponse}\n\n## Actionable Recommendations\nBased on the analysis above, here are the priority actions for tech vendors:\n\n1. **Immediate Actions (Next 30 days)**\n2. **Strategic Positioning (Next 90 days)**\n3. **Long-term Market Development (6-12 months)**\n\n## Risk Mitigation\nKey risks to monitor and avoid...`;
+      }
+
+      return rawResponse;
+    };
+
+    const formattedResponse = router.formatKairosResponse(message, aiResponse);
+
     res.json({
-      ai_response: aiResponse,
+      ai_response: formattedResponse,
       response_time_ms: Date.now() - (req.startTime || Date.now()),
       suggested_followups: followups,
       sources_used: router.extractSourcesSummary(webData),
@@ -200,27 +214,34 @@ router.shouldScrapeWeb = (message) => {
 router.generateIntelligentFollowups = (message, context = {}) => {
   const messageType = router.detectMessageType(message);
 
-  if (messageType === 'event_query') {
+  if (messageType === 'market_evolution') {
     return [
-      "What are the best networking strategies for these events?",
-      "Which events offer the highest ROI for my business goals?",
-      "How should I prepare for maximum networking impact?"
+      "How do I time my market entry to capitalize on these trends?",
+      "Which specific companies are best positioned to benefit from these changes?",
+      "What are the biggest risks of entering this market segment now?"
     ];
   }
 
-  if (messageType === 'business_advice') {
+  if (messageType === 'policy_impact') {
     return [
-      "What are the key risks to consider in this strategy?",
-      "How does this compare to regional market trends?",
-      "What's the recommended timeline for implementation?"
+      "How can I position my solution to align with government priorities?",
+      "Which policy changes create the biggest vendor opportunities?",
+      "What compliance requirements should I prepare for?"
     ];
   }
 
-  // Default Philippine business intelligence followups
+  if (messageType === 'competitive_analysis') {
+    return [
+      "How do I differentiate against established local players?",
+      "What pricing strategies work best in this competitive landscape?",
+      "Which market segments are most underserved?"
+    ];
+  }
+
   return [
-    "What are the latest trends in the Philippine business landscape?",
-    "How can I leverage local networking opportunities?",
-    "What should I know about doing business in the Philippines?"
+    "What's my optimal go-to-market sequence for the Philippines?",
+    "How do I build credibility quickly with Filipino enterprise clients?",
+    "Which Southeast Asian markets should I target after Philippines?"
   ];
 };
 
