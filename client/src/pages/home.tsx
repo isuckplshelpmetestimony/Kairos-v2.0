@@ -13,6 +13,36 @@ import SearchToggle from '../components/SearchToggle';
 import AIChatInterface from '../components/crisis/AIChatInterface';
 import { config } from '../config';
 
+// Chat interfaces moved to top level
+export interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  followups?: any;
+  conversationStage?: any;
+  intentDetected?: any;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+}
+
+const getInitialSessions = (): ChatSession[] => {
+  const stored = localStorage.getItem('kairos_chat_sessions');
+  if (stored) return JSON.parse(stored);
+  const id = `session_${Date.now()}`;
+  return [{ id, title: 'New Chat', createdAt: new Date().toISOString() }];
+};
+
+const getInitialMessages = (): Record<string, ChatMessage[]> => {
+  const stored = localStorage.getItem('kairos_chat_messages');
+  if (stored) return JSON.parse(stored);
+  return {};
+};
+
 interface HomeProps {
   user: { email: string; phone: string; role: string };
   premiumUsers: any[];
@@ -35,6 +65,23 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
   const chatRef = useRef<HTMLDivElement>(null);
   const [showDockedChat, setShowDockedChat] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+
+  // Chat state moved to home component level for persistence
+  const [sessions, setSessions] = useState<ChatSession[]>(getInitialSessions());
+  const [activeSessionId, setActiveSessionId] = useState<string>(sessions[0]?.id || '');
+  const [messagesBySession, setMessagesBySession] = useState<Record<string, ChatMessage[]>>(getInitialMessages());
+  const [loading, setLoading] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Persist sessions/messages
+  useEffect(() => {
+    localStorage.setItem('kairos_chat_sessions', JSON.stringify(sessions));
+  }, [sessions]);
+  useEffect(() => {
+    localStorage.setItem('kairos_chat_messages', JSON.stringify(messagesBySession));
+  }, [messagesBySession]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -110,7 +157,22 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           {searchMode === 'company' && (
             (user.role === 'admin' || user.role === 'premium') ? (
               <div ref={chatRef} id="kairos-chatbox">
-                <AIChatInterface />
+                <AIChatInterface 
+                  sessions={sessions}
+                  setSessions={setSessions}
+                  activeSessionId={activeSessionId}
+                  setActiveSessionId={setActiveSessionId}
+                  messagesBySession={messagesBySession}
+                  setMessagesBySession={setMessagesBySession}
+                  loading={loading}
+                  setLoading={setLoading}
+                  editingSessionId={editingSessionId}
+                  setEditingSessionId={setEditingSessionId}
+                  editingName={editingName}
+                  setEditingName={setEditingName}
+                  sidebarOpen={sidebarOpen}
+                  setSidebarOpen={setSidebarOpen}
+                />
               </div>
             ) : (
               <div ref={chatRef} id="kairos-chatbox">

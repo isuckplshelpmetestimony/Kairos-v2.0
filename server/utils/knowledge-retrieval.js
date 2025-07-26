@@ -27,31 +27,98 @@ class KnowledgeRetrieval {
           let webContent = '';
           
           if (urlMatch) {
-            console.log('🔍 DEBUG: Using direct URL scraping');
-            // If specific URL provided, scrape that URL
-            const response = await axios.post(`${firecrawlUrl}/v1/scrape`, {
-              url: urlMatch[0],
-              formats: ['markdown', 'html']
-            });
-            console.log('🔍 DEBUG: Direct scrape response status:', response.status);
-            console.log('🔍 DEBUG: Direct scrape success:', response.data?.success);
+            console.log('🔍 Direct URL Request:', { url: urlMatch[0], endpoint: `${firecrawlUrl}/v0/scrape` });
             
-            if (response.data && response.data.success) {
-              webContent = response.data.markdown || response.data.html || response.data.text || '';
-              console.log('🔍 DEBUG: Direct scrape content length:', webContent.length);
+            // Try primary method with correct endpoint
+            try {
+              const response = await fetch(`${firecrawlUrl}/v0/scrape`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  url: urlMatch[0],
+                  formats: ['markdown', 'html']
+                })
+              });
+              
+              const responseText = await response.text();
+              console.log('🔍 Direct URL Response:', { 
+                status: response.status, 
+                bodyLength: responseText.length, 
+                firstChars: responseText.slice(0, 200) 
+              });
+              
+              // Parse response
+              try {
+                const data = JSON.parse(responseText);
+                console.log('🔍 Parsed Response:', {
+                  success: data.success,
+                  contentExists: !!data.data?.content,
+                  contentLength: data.data?.content?.length || 0,
+                  dataKeys: Object.keys(data)
+                });
+                
+                if (data.success && data.data?.content) {
+                  webContent = data.data.content;
+                  console.log('🔍 ✅ Web content successfully extracted');
+                } else {
+                  console.log('🔍 ❌ No content in response');
+                }
+              } catch (parseError) {
+                console.log('🔍 JSON Parse Error:', parseError.message);
+                console.log('🔍 Raw Response (first 500 chars):', responseText.slice(0, 500));
+              }
+              
+            } catch (error) {
+              console.log('🔍 Primary scrape failed:', error.message);
+              
+              // Fallback to axios if fetch fails
+              try {
+                console.log('🔍 Trying axios fallback...');
+                const axiosResponse = await axios.post(`${firecrawlUrl}/v0/scrape`, {
+                  url: urlMatch[0],
+                  formats: ['markdown', 'html']
+                });
+                
+                if (axiosResponse.data && axiosResponse.data.success) {
+                  webContent = axiosResponse.data.data?.content || '';
+                  console.log('🔍 ✅ Axios fallback successful');
+                }
+              } catch (axiosError) {
+                console.log('🔍 Axios fallback also failed:', axiosError.message);
+              }
             }
           } else {
             console.log('🔍 DEBUG: Using search-based scraping');
             // For business intelligence queries, search for relevant information
             // Use search to find relevant content about the query
-            const searchResponse = await axios.post(`${firecrawlUrl}/v1/search`, {
+            const requestBody = {
               query: lastUserMessage,
               limit: 3,
               scrapeOptions: {
                 formats: ['markdown'],
                 onlyMainContent: true
               }
+            };
+            const requestHeaders = {
+              'Content-Type': 'application/json'
+            };
+            
+            console.log('🔍 Firecrawl Request:', {
+              url: `${firecrawlUrl}/v1/search`,
+              method: 'POST',
+              headers: requestHeaders,
+              body: JSON.stringify(requestBody)
             });
+            
+            const searchResponse = await axios.post(`${firecrawlUrl}/v1/search`, requestBody, { headers: requestHeaders });
+            
+            console.log('🔍 Firecrawl Raw Response:', {
+              status: searchResponse.status,
+              statusText: searchResponse.statusText,
+              headers: searchResponse.headers
+            });
+            
+            console.log('🔍 Firecrawl Response Body:', JSON.stringify(searchResponse.data, null, 2));
             
             console.log('🔍 DEBUG: Search response status:', searchResponse.status);
             console.log('🔍 DEBUG: Results found:', searchResponse.data?.data?.length || 0);

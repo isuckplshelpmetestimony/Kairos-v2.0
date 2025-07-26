@@ -24,43 +24,45 @@ export interface ChatSession {
   createdAt: string;
 }
 
-const getInitialSessions = (): ChatSession[] => {
-  const stored = localStorage.getItem('kairos_chat_sessions');
-  if (stored) return JSON.parse(stored);
-  const id = `session_${Date.now()}`;
-  return [{ id, title: 'New Chat', createdAt: new Date().toISOString() }];
-};
+interface AIChatInterfaceProps {
+  sessions: ChatSession[];
+  setSessions: React.Dispatch<React.SetStateAction<ChatSession[]>>;
+  activeSessionId: string;
+  setActiveSessionId: React.Dispatch<React.SetStateAction<string>>;
+  messagesBySession: Record<string, ChatMessage[]>;
+  setMessagesBySession: React.Dispatch<React.SetStateAction<Record<string, ChatMessage[]>>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  editingSessionId: string | null;
+  setEditingSessionId: React.Dispatch<React.SetStateAction<string | null>>;
+  editingName: string;
+  setEditingName: React.Dispatch<React.SetStateAction<string>>;
+  sidebarOpen: boolean;
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-const getInitialMessages = (): Record<string, ChatMessage[]> => {
-  const stored = localStorage.getItem('kairos_chat_messages');
-  if (stored) return JSON.parse(stored);
-  return {};
-};
-
-const AIChatInterface: React.FC = () => {
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
+  sessions,
+  setSessions,
+  activeSessionId,
+  setActiveSessionId,
+  messagesBySession,
+  setMessagesBySession,
+  loading,
+  setLoading,
+  editingSessionId,
+  setEditingSessionId,
+  editingName,
+  setEditingName,
+  sidebarOpen,
+  setSidebarOpen
+}) => {
   const [inputValue, setInputValue] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [showPrompts, setShowPrompts] = useState(true);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  // Chat session state
-  const [sessions, setSessions] = useState<ChatSession[]>(getInitialSessions());
-  const [activeSessionId, setActiveSessionId] = useState<string>(sessions[0]?.id || '');
-  const [messagesBySession, setMessagesBySession] = useState<Record<string, ChatMessage[]>>(getInitialMessages());
-  const [loading, setLoading] = useState(false);
-  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Persist sessions/messages
-  useEffect(() => {
-    localStorage.setItem('kairos_chat_sessions', JSON.stringify(sessions));
-  }, [sessions]);
-  useEffect(() => {
-    localStorage.setItem('kairos_chat_messages', JSON.stringify(messagesBySession));
-  }, [messagesBySession]);
 
   useEffect(() => {
     if (editingSessionId && inputRef.current) {
@@ -98,44 +100,34 @@ const AIChatInterface: React.FC = () => {
         const updated = prev.map(s => 
           s.id === editingSessionId ? { ...s, title: editingName.trim() } : s
         );
-        localStorage.setItem('kairos_chat_sessions', JSON.stringify(updated));
-        console.log('Updated sessions:', updated);
+        console.log('Updated sessions after rename:', updated);
         return updated;
       });
+      setEditingSessionId(null);
+      setEditingName('');
     }
-    setEditingSessionId(null);
-    setEditingName('');
   };
 
   const handleDeleteChat = (sessionId: string) => {
-    console.log('handleDeleteChat called with sessionId:', sessionId);
-    if (sessions.length > 1) {
-      setSessions(prev => {
-        const updated = prev.filter(s => s.id !== sessionId);
-        localStorage.setItem('kairos_chat_sessions', JSON.stringify(updated));
-        console.log('Updated sessions after delete:', updated);
-        return updated;
-      });
-      setMessagesBySession(prev => {
-        const newMessages = { ...prev };
-        delete newMessages[sessionId];
-        localStorage.setItem('kairos_chat_messages', JSON.stringify(newMessages));
-        return newMessages;
-      });
-      
-      // If we're deleting the active session, switch to the first available session
-      if (sessionId === activeSessionId) {
-        const remainingSessions = sessions.filter(s => s.id !== sessionId);
-        if (remainingSessions.length > 0) {
-          setActiveSessionId(remainingSessions[0].id);
-        }
+    console.log('Delete button clicked for sessionId:', sessionId);
+    setSessions(prev => {
+      const updated = prev.filter(s => s.id !== sessionId);
+      console.log('Updated sessions after delete:', updated);
+      return updated;
+    });
+    setMessagesBySession(prev => {
+      const { [sessionId]: deleted, ...rest } = prev;
+      return rest;
+    });
+    
+    // If we deleted the active session, switch to the first available session
+    if (activeSessionId === sessionId) {
+      const remainingSessions = sessions.filter(s => s.id !== sessionId);
+      if (remainingSessions.length > 0) {
+        setActiveSessionId(remainingSessions[0].id);
       }
-    } else {
-      console.log('Cannot delete last session');
     }
   };
-
-
 
   const setActiveSessionMessages = (msgs: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
     setMessagesBySession(prev => ({
@@ -249,61 +241,59 @@ const AIChatInterface: React.FC = () => {
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className={`mb-2 cursor-pointer transition-all text-sm group ${
+                  className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
                     session.id === activeSessionId ? 'badge-premium' : 'px-3 py-2 text-white/90 hover:bg-white/10 rounded-lg'
                   }`}
                   onClick={() => handleSessionChange(session.id)}
                 >
-                  {editingSessionId === session.id ? (
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={handleSaveRename}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSaveRename()}
-                      className="w-full bg-transparent text-white focus:outline-none"
-                      autoFocus
-                    />
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm truncate">{session.title}</span>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-100 flex items-center">
-                        <button
-                          onClick={(e) => {
-                            console.log('Rename button clicked for sessionId:', session.id);
-                            e.stopPropagation();
-                            handleRenameChat(session.id);
-                          }}
-                          className="text-white/70 hover:text-white p-1 mr-1"
-                          title="Rename chat"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            console.log('Delete button clicked for sessionId:', session.id);
-                            e.stopPropagation();
-                            handleDeleteChat(session.id);
-                          }}
-                          className="text-white/70 hover:text-white p-1"
-                          title="Delete chat"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    {editingSessionId === session.id ? (
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={handleSaveRename}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSaveRename()}
+                        className="bg-transparent border-none outline-none text-white text-sm w-full"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="text-sm truncate block">{session.title}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRenameChat(session.id);
+                      }}
+                      className="text-white/70 hover:text-white p-1 mr-1"
+                      title="Rename chat"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteChat(session.id);
+                      }}
+                      className="text-white/70 hover:text-white p-1"
+                      title="Delete chat"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </nav>
           </div>
         )}
-        
+
         {/* Chat Area */}
         <div className="flex-1 flex flex-col p-4">
           
@@ -367,7 +357,7 @@ const AIChatInterface: React.FC = () => {
             {loading && <div className="text-gray-400">Kairos is thinking...</div>}
             <div ref={chatEndRef} />
           </div>
-          
+
           <div className="flex gap-3 mt-auto">
             <input
               value={inputValue}
