@@ -6,26 +6,84 @@ class KnowledgeRetrieval {
     const dataNeeds = strategy.data_needed;
     let data = {};
 
+    console.log('🔍 DEBUG: fetchRelevantData called');
+    console.log('🔍 DEBUG: intent.primary_intent:', intent.primary_intent);
+    console.log('🔍 DEBUG: dataNeeds:', dataNeeds);
+
     try {
       // Firecrawl integration: If the user intent or message requests web scraping or live web data
       if (intent.primary_intent === 'web_scrape' || /scrape|search the internet|web data|latest information|crawl/i.test(conversationState.memory.slice(-1)[0]?.user || '')) {
         const lastUserMessage = conversationState.memory.slice(-1)[0]?.user || '';
         let urlMatch = lastUserMessage.match(/https?:\/\/[\w\.-]+/);
-        let url = urlMatch ? urlMatch[0] : 'https://news.google.com';
+        
+        console.log('🔍 DEBUG: Scraping query:', lastUserMessage);
+        console.log('🔍 DEBUG: URL match found:', !!urlMatch);
+        if (urlMatch) console.log('🔍 DEBUG: URL:', urlMatch[0]);
+        
+        // Enhanced web scraping logic
         try {
           const firecrawlUrl = process.env.FIRECRAWL_URL;
-          const response = await axios.post(`${firecrawlUrl}/v1/scrape`, {
-            url,
-            formats: ['markdown', 'html']
-          });
-          if (response.data && response.data.success) {
-            data.webContent = response.data.markdown || response.data.html || response.data.text || '';
+          console.log('🔍 DEBUG: Firecrawl URL:', firecrawlUrl);
+          let webContent = '';
+          
+          if (urlMatch) {
+            console.log('🔍 DEBUG: Using direct URL scraping');
+            // If specific URL provided, scrape that URL
+            const response = await axios.post(`${firecrawlUrl}/v1/scrape`, {
+              url: urlMatch[0],
+              formats: ['markdown', 'html']
+            });
+            console.log('🔍 DEBUG: Direct scrape response status:', response.status);
+            console.log('🔍 DEBUG: Direct scrape success:', response.data?.success);
+            
+            if (response.data && response.data.success) {
+              webContent = response.data.markdown || response.data.html || response.data.text || '';
+              console.log('🔍 DEBUG: Direct scrape content length:', webContent.length);
+            }
+          } else {
+            console.log('🔍 DEBUG: Using search-based scraping');
+            // For business intelligence queries, search for relevant information
+            // Use search to find relevant content about the query
+            const searchResponse = await axios.post(`${firecrawlUrl}/v1/search`, {
+              query: lastUserMessage,
+              limit: 3,
+              scrapeOptions: {
+                formats: ['markdown'],
+                onlyMainContent: true
+              }
+            });
+            
+            console.log('🔍 DEBUG: Search response status:', searchResponse.status);
+            console.log('🔍 DEBUG: Results found:', searchResponse.data?.data?.length || 0);
+            
+            if (searchResponse.data && searchResponse.data.data) {
+              const totalContent = searchResponse.data.data.reduce((acc, r) =>
+                acc + (r.markdown || r.content || '').length, 0);
+              console.log('🔍 DEBUG: Total content length:', totalContent);
+              
+              webContent = searchResponse.data.data.map(result => 
+                `Source: ${result.url}\n${result.markdown || result.content || ''}`
+              ).join('\n\n---\n\n');
+              
+              console.log('🔍 DEBUG: Final webContent length:', webContent.length);
+              console.log('🔍 DEBUG: First 200 chars of webContent:', webContent.substring(0, 200));
+            }
+          }
+          
+          if (webContent) {
+            data.webContent = webContent;
+            console.log('🔍 DEBUG: ✅ Web content successfully added to data');
           } else {
             data.webContent = 'Failed to fetch live web data.';
+            console.log('🔍 DEBUG: ❌ No web content found, using fallback message');
           }
         } catch (err) {
+          console.error('🔍 DEBUG: Firecrawl error:', err.message);
+          console.error('🔍 DEBUG: Full error:', err);
           data.webContent = 'Error fetching live web data.';
         }
+      } else {
+        console.log('🔍 DEBUG: Web scraping not triggered - intent or pattern not matched');
       }
 
       // Summary stats for greetings
@@ -73,7 +131,9 @@ class KnowledgeRetrieval {
 
       // Contextual data based on conversation history
       else if (dataNeeds === 'contextual') {
-        data = await this.getContextualData(conversationState);
+        const contextualData = await this.getContextualData(conversationState);
+        // Preserve existing data (like webContent) while adding contextual data
+        Object.assign(data, contextualData);
       }
 
     } catch (error) {

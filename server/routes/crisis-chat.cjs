@@ -4,6 +4,7 @@ const sql = connection.sql || connection;
 const { authenticateToken, requireAuth, requirePremium } = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const express = require('express');
+const axios = require('axios');
 const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
 
 const router = express.Router();
@@ -20,13 +21,15 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
 
     // Step 1: Analyze intent and decide if we need web scraping
     const shouldScrape = router.shouldScrapeWeb(message);
-    console.log('Should scrape web:', shouldScrape);
+    console.log('🚀 Should scrape:', shouldScrape);
 
     // Step 2: Get company context and web data if needed
     let webData = [];
     let contextData = {};
     
     if (shouldScrape) {
+      console.log('🔍 DEBUG: Web scraping triggered for message:', message);
+      
       // Create a mock conversation state for the knowledge retrieval
       const conversationState = {
         memory: [{ user: message }],
@@ -45,17 +48,32 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
       };
       
       try {
+        console.log('🔍 DEBUG: Calling KnowledgeRetrieval.fetchRelevantData...');
         contextData = await KnowledgeRetrieval.fetchRelevantData(intent, strategy, conversationState);
+        console.log('🔍 DEBUG: KnowledgeRetrieval returned:', Object.keys(contextData));
+        
+        // ADD THESE CRITICAL LOGS:
+        console.log('🚀 Context data received:', !!contextData.webContent);
+        console.log('🚀 Web content length:', contextData.webContent?.length || 0);
+        
         if (contextData.webContent) {
+          console.log('🔍 DEBUG: Web content found, length:', contextData.webContent.length);
+          console.log('🔍 DEBUG: First 300 chars of web content:', contextData.webContent.substring(0, 300));
+          
           webData.push({
             source: 'Firecrawl',
             data: { content: contextData.webContent },
             success: true
           });
+          console.log('🔍 DEBUG: ✅ Web data added to webData array');
+        } else {
+          console.log('🔍 DEBUG: ❌ No web content in contextData');
         }
       } catch (error) {
-        console.error('Error fetching web data:', error);
+        console.error('🔍 DEBUG: Error fetching web data:', error);
       }
+    } else {
+      console.log('🔍 DEBUG: Web scraping not triggered');
     }
 
     // Step 3: Build company knowledge base
@@ -64,17 +82,37 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
     // Step 4: Generate response with enhanced prompting
     let enhancedPrompt = message;
     
+    console.log('🔍 DEBUG: Building enhanced prompt...');
+    console.log('🔍 DEBUG: Original message:', message);
+    console.log('🔍 DEBUG: webData length:', webData.length);
+    console.log('🔍 DEBUG: companyData.companies length:', companyData.companies.length);
+    
     if (webData.length > 0) {
-      enhancedPrompt += `\n\nRecent web data:\n${webData.map(item => item.data.content).join('\n\n')}`;
+      const webDataContent = webData.map(item => item.data.content).join('\n\n');
+      enhancedPrompt += `\n\nRecent web data:\n${webDataContent}`;
+      console.log('🔍 DEBUG: ✅ Web data added to prompt, length:', webDataContent.length);
+      console.log('🔍 DEBUG: First 500 chars of web data in prompt:', webDataContent.substring(0, 500));
+      console.log('🚀 Enhanced prompt includes web data:', webDataContent.length > 0);
+    } else {
+      console.log('🔍 DEBUG: ❌ No web data to add to prompt');
     }
     
     if (companyData.companies.length > 0) {
-      enhancedPrompt += `\n\nCompany context:\n${JSON.stringify(companyData.companies.slice(0, 3), null, 2)}`;
+      const companyContext = JSON.stringify(companyData.companies.slice(0, 3), null, 2);
+      enhancedPrompt += `\n\nCompany context:\n${companyContext}`;
+      console.log('🔍 DEBUG: ✅ Company context added to prompt');
+    } else {
+      console.log('🔍 DEBUG: ❌ No company data to add to prompt');
     }
 
+    console.log('🔍 DEBUG: Final enhanced prompt length:', enhancedPrompt.length);
+    console.log('🔍 DEBUG: First 1000 chars of final prompt:', enhancedPrompt.substring(0, 1000));
+
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+    console.log('🔍 DEBUG: Calling Gemini with prompt...');
     const result = await model.generateContent(enhancedPrompt);
     const aiResponse = result.response.text();
+    console.log('🔍 DEBUG: ✅ Gemini response received, length:', aiResponse.length);
 
     // Step 5: Generate follow-up suggestions
     const followups = router.generateIntelligentFollowups(message, { companies: companyData.companies });
@@ -95,18 +133,50 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
   }
 });
 
+
+
 // Helper methods
 router.shouldScrapeWeb = (message) => {
   const webIndicators = [
-    /latest|recent|current|today|this month|news/i,
+    // TEMPORAL: Future/current events always need web search
+    /\b(upcoming|future|next|later|soon|coming|happening|scheduled|planned)\b/i,
+    /\b(202[5-9]|this year|next year|this month|next month)\b/i,
+    
+    // TEMPORAL + BUSINESS CONTEXT: Only trigger when combined with business keywords
+    /\b(current|latest|recent|new|updated)\b.*\b(market|industry|trend|business|company|event|conference|opportunity)\b/i,
+    /\b(market|industry|trend|business|company|event|conference|opportunity)\b.*\b(current|latest|recent|new|updated)\b/i,
+    /\b(today|tomorrow)\b.*\b(market|industry|trend|business|company|event|conference|opportunity)\b/i,
+    /\b(market|industry|trend|business|company|event|conference|opportunity)\b.*\b(today|tomorrow)\b/i,
+
+    // EVENTS: Conference/business event queries need real-time data
+    /\b(conference|summit|event|expo|forum|seminar|workshop|networking|meeting|gathering)\b/i,
+    /\b(speaker|presentation|talk|session|registration|ticket|attend)\b/i,
+
+    // BUSINESS INTELLIGENCE: Market queries need fresh data
+    /\b(market|industry|trend|analysis|report|business|company|competitor)\b/i,
+    /\b(decision maker|ceo|cto|executive|opportunity|prospect|client)\b/i,
+
+    // LOCATION + TIME: Geographic + temporal combinations
+    /\b(metro manila|manila|philippines|ph)\b.*\b(upcoming|happening|202[5-9])\b/i,
+    /\b(upcoming|happening|202[5-9])\b.*\b(metro manila|manila|philippines)\b/i,
+
+    // SEARCH REQUESTS: Any explicit search intent
+    /\b(show me|tell me|find|list|search|look|check|verify|confirm)\b/i,
+    /\b(internet|web|online|scrape|crawl|browse)\b/i,
+
+    // CONSULTANT QUESTIONS: Advisory queries need context
+    /\b(recommend|suggest|advice|should i|which|best|what.*available)\b/i,
+
+    // ORIGINAL PATTERNS: Preserve existing functionality
     /market trends|industry update|competitive landscape/i,
     /what.*happening|current.*situation/i,
     /scrape.*internet|search.*internet|web.*data|live.*data/i,
     /scrape|search the internet|web scraping|crawl/i
   ];
-
   return webIndicators.some(pattern => pattern.test(message));
 };
+
+
 
 router.generateIntelligentFollowups = (message, context) => {
   const baseFollowups = [
@@ -126,11 +196,17 @@ router.generateIntelligentFollowups = (message, context) => {
 };
 
 router.extractSourcesSummary = (webData) => {
-  return webData.map(item => ({
+  console.log('🔍 DEBUG: extractSourcesSummary called with webData length:', webData.length);
+  console.log('🔍 DEBUG: webData content:', JSON.stringify(webData, null, 2));
+  
+  const result = webData.map(item => ({
     source: item.source,
     title: item.data?.title || 'Unknown',
     scraped: item.success
   }));
+  
+  console.log('🔍 DEBUG: extractSourcesSummary result:', JSON.stringify(result, null, 2));
+  return result;
 };
 
 router.saveChatConversation = async (userId, message, response, sessionId) => {
@@ -157,5 +233,36 @@ async function buildCompanyKnowledgeBase() {
   // For now, return a mock structure for compatibility
   return { companies: [] };
 }
+
+// Simple Firecrawl connectivity test
+router.get('/test-firecrawl', async (req, res) => {
+  try {
+    const firecrawlUrl = process.env.FIRECRAWL_URL;
+
+    // Test search functionality
+    const testSearch = await axios.post(`${firecrawlUrl}/v1/search`, {
+      query: "tech conferences Manila",
+      limit: 1,
+      scrapeOptions: { formats: ['markdown'], onlyMainContent: true }
+    });
+
+    console.log('🧪 Test search status:', testSearch.status);
+    console.log('🧪 Test results count:', testSearch.data?.data?.length || 0);
+
+    res.json({
+      status: 'success',
+      firecrawlUrl,
+      responseStatus: testSearch.status,
+      resultsFound: testSearch.data?.data?.length || 0
+    });
+
+  } catch (error) {
+    console.error('🧪 Firecrawl test failed:', error.message);
+    res.status(500).json({
+      status: 'failed',
+      error: error.message
+    });
+  }
+});
 
 module.exports = router; 
