@@ -113,7 +113,24 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
     console.log('🔍 DEBUG: First 1000 chars of final prompt:', enhancedPrompt.substring(0, 1000));
     performanceTimer.promptBuilding = Date.now() - promptBuildingStart;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+    const systemPrompt = `You are Kairos, the premier strategic advisor for tech service providers seeking to acquire clients in the Philippines and Southeast Asia.
+
+RESPONSE FORMAT:
+## Executive Summary
+[3-5 sentences]
+
+## Analysis
+[Market insights and opportunities]
+
+## Recommendations
+1. Immediate action (30 days)
+2. Strategic development (90 days)
+3. Long-term positioning (6-12 months)`;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-pro",
+      systemInstruction: systemPrompt
+    });
     console.log('🔍 DEBUG: Calling Gemini with prompt...');
     const geminiStart = Date.now();
     const result = await model.generateContent(enhancedPrompt);
