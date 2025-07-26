@@ -105,7 +105,7 @@ export const EnhancedAIChatInterface: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
         {/* Enhanced Header */}
         <div className="p-6 border-b border-white/20 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
@@ -122,7 +122,7 @@ export const EnhancedAIChatInterface: React.FC = () => {
           </div>
         </div>
         {/* Messages Area with Enhanced Status */}
-        <div className="h-96 overflow-y-auto p-6 space-y-4">
+        <div className="h-[40rem] overflow-y-auto p-6 space-y-4">
           {/* Enhanced Status Indicator */}
           {isLoading && currentStatus && (
             <div className="flex justify-start">

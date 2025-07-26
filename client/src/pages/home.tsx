@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from '../contexts/AuthContext';
 import SearchSection from "../components/SearchSection";
 import FeaturedEvents from "../components/FeaturedEvents";
@@ -12,7 +12,6 @@ import PaymentPage from '../components/PaymentPage';
 import SearchToggle from '../components/SearchToggle';
 import AIChatInterface from '../components/crisis/AIChatInterface';
 import { config } from '../config';
-import { useRef } from "react";
 
 interface HomeProps {
   user: { email: string; phone: string; role: string };
@@ -79,10 +78,8 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
       showEventDetails(eventId);
       return;
     }
-
     // Check if user is actually premium (not just admin)
     const isPremiumUser = user.role === 'premium' || hasFullAccess(user.email, user.phone, premiumUsers);
-    
     if (isPremiumUser && user.role !== 'free') {
       showEventDetails(eventId);
     } else {
@@ -95,64 +92,55 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
       {/* Main Content */}
       <main className="pt-20 pb-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          {/* Spacing to maintain layout */}
+        <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="mb-8"></div>
-          
-          {/* Main Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Discover Business Events for{' '}
             <span className="gradient-text">Strategic Networking</span>
           </h1>
-
-          {/* Description */}
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             Find networking opportunities where your target clients attend in the Philippines
           </p>
-
-          {/* Search Toggle */}
           <SearchToggle
             mode={searchMode}
             onChange={setSearchMode}
             disabled={false}
           />
-          {/* Search Section (only for event mode) */}
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
-          {/* Company Intelligence: single search bar, no filters/results */}
           {searchMode === 'company' && (
             (user.role === 'admin' || user.role === 'premium') ? (
-              <div ref={chatRef} id="kairos-chatbox"><AIChatInterface /></div>
+              <div ref={chatRef} id="kairos-chatbox">
+                <AIChatInterface />
+              </div>
             ) : (
-            <div ref={chatRef} id="kairos-chatbox">
-              <form
-                className="glass-effect p-6 max-w-4xl mx-auto"
-                onSubmit={e => e.preventDefault()}
-              >
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-                  <div className="relative flex-1 w-full">
-                    <input
-                      type="text"
-                      placeholder="Ask me anything about business events happening..."
-                      className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
-                      aria-label="Search companies"
-                    />
+              <div ref={chatRef} id="kairos-chatbox">
+                <form
+                  className="glass-effect p-6 max-w-4xl mx-auto"
+                  onSubmit={e => e.preventDefault()}
+                >
+                  <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                    <div className="relative flex-1 w-full">
+                      <input
+                        type="text"
+                        placeholder="Ask me anything about business events happening..."
+                        className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
+                        aria-label="Search companies"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
+                      tabIndex={-1}
+                      disabled
+                    >
+                      Search
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
-                    tabIndex={-1}
-                    disabled
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
-            </div>
+                </form>
+              </div>
             )
           )}
         </div>
-
-        {/* Always show event cards below the search bar/chatbot */}
         <div className="mt-16 px-4">
           <div className="max-w-7xl mx-auto">
             {isLoading ? (
@@ -169,8 +157,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             )}
           </div>
         </div>
-
-        {/* Docked Chatbot: always rendered, animate in/out with opacity and scale */}
         {searchMode === 'company' && (
           <div style={{position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 50}} className="flex justify-center w-full">
             <div className="w-full max-w-xl px-4">
@@ -204,7 +190,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             </div>
           </div>
         )}
-        {/* Modal for full AIChatInterface */}
         {showChatModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowChatModal(false)}>
             <div className="bg-gray-900 rounded-2xl p-6 max-w-2xl w-full shadow-xl relative" onClick={e => e.stopPropagation()}>
@@ -213,7 +198,6 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
             </div>
           </div>
         )}
-        
         {showPaymentModal && <PaymentPage onClose={() => setShowPaymentModal(false)} />}
       </main>
     </div>
