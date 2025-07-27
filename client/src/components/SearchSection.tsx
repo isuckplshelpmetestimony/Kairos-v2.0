@@ -21,6 +21,15 @@ const industries = [
   'Government & Public Sector',
   'Retail & E-commerce',
   'Banking & Financial Services',
+  'Healthcare',
+  'Agriculture',
+  'Logistics & Supply Chain',
+  'Manufacturing',
+  'Education',
+  'Real Estate & Construction',
+  'Transportation',
+  'Utilities',
+  'Tourism',
 ];
 
 const newCompanyStageOptions = [
@@ -67,7 +76,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
             >
               <SelectValue placeholder="All industries" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
+            <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px] overflow-y-auto" sideOffset={4} avoidCollisions={false}>
               {industries.map(ind => (
                 <SelectItem key={ind} value={ind} className="text-white hover:bg-gray-700">
                   {ind}
@@ -86,7 +95,7 @@ export default function SearchSection({ onSearch }: SearchSectionProps) {
             >
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
+            <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px] overflow-y-auto" sideOffset={4} avoidCollisions={false}>
               {newCompanyStageOptions.map(stage => (
                 <SelectItem key={stage} value={stage} className="text-white hover:bg-gray-700">
                   {stage}
