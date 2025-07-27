@@ -376,4 +376,43 @@ router.get('/test-firecrawl', async (req, res) => {
   }
 });
 
+// GET /api/crisis/chat/history - Get conversation history (USER-ISOLATED)
+router.get('/history', authenticateToken, requireAuth, requirePremium, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { limit = 20, session_id } = req.query;
+
+    console.log(`📋 Fetching chat history for user ${userId}`);
+
+    let query = `
+      SELECT message_content, message_type, created_at, session_id
+      FROM crisis_chat_conversations
+      WHERE user_id = $1
+    `;
+    const queryParams = [userId];
+
+    if (session_id) {
+      query += ` AND session_id = $2`;
+      queryParams.push(session_id);
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${queryParams.length + 1}`;
+    queryParams.push(parseInt(limit));
+
+    const conversations = await sql(query, queryParams);
+
+    console.log(`📋 Found ${conversations.length} conversations for user ${userId}`);
+
+    res.json({
+      conversations: conversations.reverse(),
+      total: conversations.length,
+      user_id: userId
+    });
+
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({ error: 'Failed to fetch chat history' });
+  }
+});
+
 module.exports = router; 

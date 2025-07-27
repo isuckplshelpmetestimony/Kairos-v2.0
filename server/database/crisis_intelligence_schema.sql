@@ -65,10 +65,24 @@ CREATE TABLE crisis_chat_conversations (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Conversation states table for user-isolated conversation management
+CREATE TABLE conversation_states (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  session_id VARCHAR(255) NOT NULL,
+  context_data JSONB DEFAULT '{}',
+  memory_data JSONB DEFAULT '[]',
+  conversation_stage VARCHAR(50) DEFAULT 'greeting',
+  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, session_id)
+);
+
 -- Create indexes for performance
 CREATE INDEX idx_crisis_companies_category ON crisis_companies(crisis_category);
 CREATE INDEX idx_crisis_companies_score ON crisis_companies(crisis_score DESC);
 CREATE INDEX idx_crisis_signals_company ON crisis_signals(company_id, signal_date DESC);
 CREATE INDEX idx_crisis_signals_type ON crisis_signals(signal_type);
 CREATE INDEX idx_decision_makers_company ON company_decision_makers(company_id);
-CREATE INDEX idx_chat_conversations_company ON crisis_chat_conversations(company_id, created_at DESC); 
+CREATE INDEX idx_chat_conversations_company ON crisis_chat_conversations(company_id, created_at DESC);
+CREATE INDEX idx_chat_conversations_user ON crisis_chat_conversations(user_id, created_at DESC);
+CREATE INDEX idx_conversation_states_user ON conversation_states(user_id, session_id); 
