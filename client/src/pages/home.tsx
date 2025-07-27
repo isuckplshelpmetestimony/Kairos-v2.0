@@ -163,52 +163,25 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           />
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
           {searchMode === 'company' && (
-            (user.role === 'admin' || user.role === 'premium') ? (
-              <div ref={chatRef} id="kairos-chatbox">
-                <AIChatInterface 
-                  sessions={sessions}
-                  setSessions={setSessions}
-                  activeSessionId={activeSessionId}
-                  setActiveSessionId={setActiveSessionId}
-                  messagesBySession={messagesBySession}
-                  setMessagesBySession={setMessagesBySession}
-                  loading={loading}
-                  setLoading={setLoading}
-                  editingSessionId={editingSessionId}
-                  setEditingSessionId={setEditingSessionId}
-                  editingName={editingName}
-                  setEditingName={setEditingName}
-                  sidebarOpen={sidebarOpen}
-                  setSidebarOpen={setSidebarOpen}
-                />
-              </div>
-            ) : (
-              <div ref={chatRef} id="kairos-chatbox">
-                <form
-                  className="glass-effect p-6 max-w-4xl mx-auto"
-                  onSubmit={e => e.preventDefault()}
-                >
-                  <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-                    <div className="relative flex-1 w-full">
-                      <input
-                        type="text"
-                        placeholder="Ask me anything about business events happening..."
-                        className="pl-4 pr-4 py-4 text-lg rounded-lg input-premium placeholder-white/70 w-full"
-                        aria-label="Search companies"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full md:w-auto px-8 py-4 text-base rounded-lg h-14 btn-premium"
-                      tabIndex={-1}
-                      disabled
-                    >
-                      Search
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )
+            <div ref={chatRef} id="kairos-chatbox">
+              <AIChatInterface 
+                sessions={sessions}
+                setSessions={setSessions}
+                activeSessionId={activeSessionId}
+                setActiveSessionId={setActiveSessionId}
+                messagesBySession={messagesBySession}
+                setMessagesBySession={setMessagesBySession}
+                loading={loading}
+                setLoading={setLoading}
+                editingSessionId={editingSessionId}
+                setEditingSessionId={setEditingSessionId}
+                editingName={editingName}
+                setEditingName={setEditingName}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                setShowPaymentModal={setShowPaymentModal}
+              />
+            </div>
           )}
         </div>
         <div className="mt-16 px-4">
@@ -264,7 +237,23 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowChatModal(false)}>
             <div className="bg-gray-900 rounded-2xl p-6 max-w-2xl w-full shadow-xl relative" onClick={e => e.stopPropagation()}>
               <button className="absolute top-2 right-2 text-gray-400 hover:text-white" onClick={() => setShowChatModal(false)}>&times;</button>
-              <AIChatInterface />
+              <AIChatInterface 
+                sessions={sessions}
+                setSessions={setSessions}
+                activeSessionId={activeSessionId}
+                setActiveSessionId={setActiveSessionId}
+                messagesBySession={messagesBySession}
+                setMessagesBySession={setMessagesBySession}
+                loading={loading}
+                setLoading={setLoading}
+                editingSessionId={editingSessionId}
+                setEditingSessionId={setEditingSessionId}
+                editingName={editingName}
+                setEditingName={setEditingName}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                setShowPaymentModal={setShowPaymentModal}
+              />
             </div>
           </div>
         )}

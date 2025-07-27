@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useAuth } from '../../contexts/AuthContext';
+import { config } from '../../config';
 
 const SUGGESTED_PROMPTS = [
   "Show me upcoming tech conferences in Metro Manila",
@@ -40,6 +42,7 @@ interface AIChatInterfaceProps {
   setEditingName: React.Dispatch<React.SetStateAction<string>>;
   sidebarOpen: boolean;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowPaymentModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
@@ -56,14 +59,52 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   editingName,
   setEditingName,
   sidebarOpen,
-  setSidebarOpen
+  setSidebarOpen,
+  setShowPaymentModal
 }) => {
+  const { user } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [showPrompts, setShowPrompts] = useState(true);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Check if user has access to chat features
+  const hasChatAccess = () => {
+    if (config.DISABLE_PREMIUM_REQUIREMENTS) return true;
+    return user?.role === 'premium' || user?.role === 'admin';
+  };
+
+  // Handle payment wall redirect for free users
+  const handlePaymentRedirect = () => {
+    if (setShowPaymentModal) {
+      setShowPaymentModal(true);
+    }
+  };
+
+  // Override chat interactions for free users
+  const handleChatInteraction = (action: string) => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
+    // Proceed with normal action based on action type
+    switch (action) {
+      case 'sendMessage':
+        sendMessage();
+        break;
+      case 'promptClick':
+        // This will be handled by the specific prompt click handler
+        break;
+      case 'newChat':
+        handleNewChat();
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     if (editingSessionId && inputRef.current) {
@@ -73,6 +114,11 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   }, [editingSessionId]);
 
   const handleNewChat = () => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
     const id = `session_${Date.now()}`;
     const newSession: ChatSession = { id, title: 'New Chat', createdAt: new Date().toISOString() };
     setSessions(prev => [newSession, ...prev]);
@@ -81,10 +127,19 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   const handleSessionChange = (id: string) => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
     setActiveSessionId(id);
   };
 
   const handleRenameChat = (sessionId: string) => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
     console.log('handleRenameChat called with sessionId:', sessionId);
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -95,13 +150,19 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   const handleSaveRename = () => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
     console.log('handleSaveRename called, editingSessionId:', editingSessionId, 'editingName:', editingName);
     if (editingSessionId && editingName.trim()) {
       setSessions(prev => {
-        const updated = prev.map(s => 
-          s.id === editingSessionId ? { ...s, title: editingName.trim() } : s
+        const updated = prev.map(session => 
+          session.id === editingSessionId 
+            ? { ...session, title: editingName.trim() }
+            : session
         );
-        console.log('Updated sessions after rename:', updated);
         return updated;
       });
       setEditingSessionId(null);
@@ -110,20 +171,22 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   const handleDeleteChat = (sessionId: string) => {
-    console.log('Delete button clicked for sessionId:', sessionId);
-    setSessions(prev => {
-      const updated = prev.filter(s => s.id !== sessionId);
-      console.log('Updated sessions after delete:', updated);
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
+    console.log('handleDeleteChat called with sessionId:', sessionId);
+    setSessions(prev => prev.filter(session => session.id !== sessionId));
+    setMessagesBySession(prev => {
+      const updated = { ...prev };
+      delete updated[sessionId];
       return updated;
     });
-    setMessagesBySession(prev => {
-      const { [sessionId]: deleted, ...rest } = prev;
-      return rest;
-    });
     
-    // If we deleted the active session, switch to the first available session
-    if (activeSessionId === sessionId) {
-      const remainingSessions = sessions.filter(s => s.id !== sessionId);
+    // If we're deleting the active session, switch to the first available session
+    if (sessionId === activeSessionId) {
+      const remainingSessions = sessions.filter(session => session.id !== sessionId);
       if (remainingSessions.length > 0) {
         setActiveSessionId(remainingSessions[0].id);
       }
@@ -131,6 +194,11 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   const setActiveSessionMessages = (msgs: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
     setMessagesBySession(prev => ({
       ...prev,
       [activeSessionId]: typeof msgs === 'function' ? msgs(prev[activeSessionId] || []) : msgs
@@ -147,36 +215,50 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   }, [currentMessages, loading, hasInteracted]);
 
   const sendMessage = async () => {
-    if (!inputValue.trim()) return;
-    setHasInteracted(true);
-    const userMsg: ChatMessage = { type: 'user', content: inputValue, id: Date.now().toString(), timestamp: new Date() };
-    setActiveSessionMessages(prev => [...prev, userMsg]);
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
+    
+    if (!inputValue.trim() || loading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputValue,
+      timestamp: new Date()
+    };
+
+    setActiveSessionMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
+    setHasInteracted(true);
+
     try {
-      const token = localStorage.getItem('auth_token');
-      const currentMessage = inputValue;
       const response = await fetch('/api/crisis/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          message: currentMessage,
+          message: inputValue,
           session_id: activeSessionId
         })
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
       const data = await response.json();
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: data.ai_response,
-        timestamp: new Date(),
-        followups: data.suggested_followups,
-        conversationStage: data.conversation_stage,
-        intentDetected: data.intent_detected
+        content: data.response,
+        timestamp: new Date()
       };
+
       setActiveSessionMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
       const errorMsg: ChatMessage = { type: 'ai', content: 'Error: ' + error.message, id: (Date.now() + 1).toString(), timestamp: new Date() };
@@ -187,6 +269,10 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   const handlePromptClick = (prompt: string) => {
+    if (!hasChatAccess()) {
+      handlePaymentRedirect();
+      return;
+    }
     setInputValue(prompt);
   };
 
@@ -196,6 +282,58 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   };
 
   console.log('Current sessions state:', sessions);
+
+  // If user doesn't have access, show payment wall prompt
+  if (!hasChatAccess()) {
+    return (
+      <div className="flex justify-center items-center w-full">
+        <div className="card-premium max-w-4xl w-full flex flex-col p-8 shadow-2xl relative" style={{ minHeight: '420px', maxHeight: '520px', height: '520px' }}>
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="mb-6">
+              <svg className="w-16 h-16 mx-auto text-purple-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <h3 className="text-2xl font-bold text-white mb-2">Premium Feature</h3>
+              <p className="text-gray-300 mb-6">Upgrade to Premium to access Kairos AI Chat Intelligence</p>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              <div className="text-left">
+                <h4 className="text-lg font-semibold text-white mb-2">What you get with Premium:</h4>
+                <ul className="text-gray-300 space-y-2">
+                  <li className="flex items-center">
+                    <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    AI-powered event intelligence and recommendations
+                  </li>
+                  <li className="flex items-center">
+                    <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Personalized networking strategies
+                  </li>
+                  <li className="flex items-center">
+                    <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Advanced event filtering and insights
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <button
+              onClick={handlePaymentRedirect}
+              className="btn-premium px-8 py-4 text-lg font-semibold rounded-xl shadow-lg transition-all hover:scale-105"
+            >
+              Upgrade to Premium
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center w-full">
@@ -281,7 +419,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                         e.stopPropagation();
                         handleDeleteChat(session.id);
                       }}
-                      className="text-white/70 hover:text-white p-1"
+                      className="text-white/70 hover:text-red-400 p-1"
                       title="Delete chat"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -295,9 +433,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
           </div>
         )}
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col p-4">
-          
+        {/* Main chat area */}
+        <div className="flex-1 flex flex-col p-6">
           {/* Suggested Prompts - only visible at top */}
           {showPrompts && (
             <div className="flex flex-col gap-2 mb-3 justify-center items-center">
