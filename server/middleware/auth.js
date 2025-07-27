@@ -4,7 +4,7 @@ const sql = connection.sql || connection;
 
 // Configuration flag to disable premium requirements
 // Set to true to make all features free, false to enable paywall
-const DISABLE_PREMIUM_REQUIREMENTS = true;
+const DISABLE_PREMIUM_REQUIREMENTS = false;
 
 const authenticateToken = async (req, res, next) => {
   try {

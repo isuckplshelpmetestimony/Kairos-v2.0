@@ -11,12 +11,12 @@ const helmet = require('helmet');
 const session = require('express-session');
 
 // Import anti-scraping middleware
-const { 
-  antiScrapingMiddleware, 
-  apiRateLimiter, 
-  authRateLimiter, 
-  chatRateLimiter 
-} = require('./middleware/anti-scraping.js');
+// const { 
+//   antiScrapingMiddleware, 
+//   apiRateLimiter, 
+//   authRateLimiter, 
+//   chatRateLimiter 
+// } = require('./middleware/anti-scraping.js');
 
 const authRoutes = require('./routes/auth.cjs');
 const userRoutes = require('./routes/users.cjs');
@@ -30,28 +30,26 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  },
-  noSniff: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
-}));
+// app.use(helmet({
+//   contentSecurityPolicy: {
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "'unsafe-inline'"],
+//       styleSrc: ["'self'", "'unsafe-inline'"],
+//       imgSrc: ["'self'", "data:", "https:"],
+//       connectSrc: ["'self'"],
+//       fontSrc: ["'self'"],
+//       objectSrc: ["'none'"],
+//       mediaSrc: ["'self'"],
+//       frameSrc: ["'none'"]
+//     }
+//   },
+//   hsts: {
+//     maxAge: 31536000,
+//     includeSubDomains: true,
+//     preload: true
+//   }
+// }));
 
 // Session configuration for rate limiting
 app.use(session({
@@ -76,7 +74,7 @@ app.use(cors({
 }));
 
 // Anti-scraping middleware (applied to all routes)
-app.use(antiScrapingMiddleware);
+// app.use(antiScrapingMiddleware);
 
 // Request logging
 app.use(morgan('combined'));
@@ -86,12 +84,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // API Routes with specific rate limiting
-app.use('/api/auth', authRateLimiter, authRoutes);
-app.use('/api/users', apiRateLimiter, userRoutes);
-app.use('/api/payments', apiRateLimiter, paymentRoutes);
-app.use('/api/crisis', apiRateLimiter, crisisRoutes);
-app.use('/api/crisis/chat', chatRateLimiter, crisisChatRoutes);
-app.use('/api/status', apiRateLimiter, statusRoutes);
+app.use('/api/auth', /* authRateLimiter, */ authRoutes);
+app.use('/api/users', /* apiRateLimiter, */ userRoutes);
+app.use('/api/payments', /* apiRateLimiter, */ paymentRoutes);
+app.use('/api/crisis', /* apiRateLimiter, */ crisisRoutes);
+app.use('/api/crisis/chat', /* chatRateLimiter, */ crisisChatRoutes);
+app.use('/api/status', /* apiRateLimiter, */ statusRoutes);
 
 // Add this debug logging
 console.log('🔍 Registered routes:');

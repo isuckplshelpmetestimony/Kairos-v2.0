@@ -4,7 +4,7 @@ export const config = {
   apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   
   // Feature Flags
-  DISABLE_PREMIUM_REQUIREMENTS: true, // Set to true to make all features free, false to enable paywall
+  DISABLE_PREMIUM_REQUIREMENTS: false, // Set to false to enable paywall and blur effects
   
   // Admin Configuration
   ADMIN_EMAIL: 'seanmacalintal0409@gmail.com',

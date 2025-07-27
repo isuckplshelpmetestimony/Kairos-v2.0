@@ -4,16 +4,16 @@
 The Kairos application has a configurable paywall system that can be easily enabled or disabled without removing any payment-related code.
 
 ## Current Status
-**PAYWALL IS DISABLED** - All premium features are currently free for all authenticated users.
+**PAYWALL IS ENABLED** - Free users see blurred events and premium features require payment.
 
-## How to Re-enable the Paywall
+## How to Disable the Paywall
 
 ### Frontend Configuration
 Edit `client/src/config.ts`:
 ```typescript
 export const config = {
   // ... other config
-  DISABLE_PREMIUM_REQUIREMENTS: false, // Set to false to enable paywall
+  DISABLE_PREMIUM_REQUIREMENTS: true, // Set to true to disable paywall
   // ... other config
 };
 ```
@@ -23,7 +23,7 @@ Edit `server/middleware/auth.js`:
 ```javascript
 // Configuration flag to disable premium requirements
 // Set to true to make all features free, false to enable paywall
-const DISABLE_PREMIUM_REQUIREMENTS = false; // Set to false to enable paywall
+const DISABLE_PREMIUM_REQUIREMENTS = true; // Set to true to disable paywall
 ```
 
 ## Premium Features

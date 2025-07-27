@@ -77,8 +77,36 @@ const antiScrapingMiddleware = (req, res, next) => {
                        req.hostname === 'localhost' || 
                        req.hostname === '127.0.0.1';
   
-  // Skip some checks in development
-  if (!isDevelopment) {
+  const isProduction = !isDevelopment;
+  
+  // Skip most checks in production to avoid false positives
+  if (isProduction) {
+    // Only check for very obvious automation in production
+    const userAgent = req.get('User-Agent') || '';
+    const obviousAutomation = [
+      'python-requests',
+      'curl',
+      'wget',
+      'selenium',
+      'puppeteer',
+      'playwright',
+      'scrapy',
+      'phantomjs',
+      'headless'
+    ];
+    
+    const isObviousAutomation = obviousAutomation.some(agent => 
+      userAgent.toLowerCase().includes(agent.toLowerCase())
+    );
+    
+    if (isObviousAutomation) {
+      console.log(`🚨 Blocked obvious automation: ${userAgent}`);
+      return res.status(403).json({ 
+        error: 'Access denied - automated access detected' 
+      });
+    }
+  } else {
+    // More strict checks for development
     // Check user agent for suspicious patterns
     const userAgent = req.get('User-Agent') || '';
     const isSuspiciousUserAgent = suspiciousUserAgents.some(agent => 
@@ -113,24 +141,24 @@ const antiScrapingMiddleware = (req, res, next) => {
   next();
 };
 
-// Rate limiters (more lenient in development)
+// Rate limiters (much more lenient in production)
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const apiRateLimiter = createRateLimiter(
   isDevelopment ? 5 * 60 * 1000 : 15 * 60 * 1000, // 5 min vs 15 min
-  isDevelopment ? 1000 : 100, // 1000 vs 100 requests
+  isDevelopment ? 1000 : 1000, // 1000 requests for both dev and prod
   'Too many API requests'
 );
 
 const authRateLimiter = createRateLimiter(
   isDevelopment ? 5 * 60 * 1000 : 15 * 60 * 1000, // 5 min vs 15 min
-  isDevelopment ? 50 : 5, // 50 vs 5 login attempts
+  isDevelopment ? 50 : 100, // 100 login attempts in production
   'Too many login attempts'
 );
 
 const chatRateLimiter = createRateLimiter(
   isDevelopment ? 30 * 1000 : 60 * 1000, // 30 sec vs 1 min
-  isDevelopment ? 100 : 10, // 100 vs 10 chat messages
+  isDevelopment ? 100 : 1000, // 1000 chat messages in production
   'Too many chat messages'
 );
 
