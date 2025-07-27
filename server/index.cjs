@@ -7,6 +7,16 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { fileURLToPath } = require('url');
 const { testConnection } = require('./database/connection.js');
+const helmet = require('helmet');
+const session = require('express-session');
+
+// Import anti-scraping middleware
+const { 
+  antiScrapingMiddleware, 
+  apiRateLimiter, 
+  authRateLimiter, 
+  chatRateLimiter 
+} = require('./middleware/anti-scraping.js');
 
 const authRoutes = require('./routes/auth.cjs');
 const userRoutes = require('./routes/users.cjs');
@@ -19,18 +29,69 @@ const statusRoutes = require('./routes/status.cjs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/payments', paymentRoutes);
-// Register crisis routes
-app.use('/api/crisis', crisisRoutes);
-app.use('/api/crisis', crisisChatRoutes);
-app.use('/api/status', statusRoutes);
+// Session configuration for rate limiting
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'kairos-anti-scraping-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://yourdomain.com'] // Replace with your actual domain
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Anti-scraping middleware (applied to all routes)
+app.use(antiScrapingMiddleware);
+
+// Request logging
+app.use(morgan('combined'));
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// API Routes with specific rate limiting
+app.use('/api/auth', authRateLimiter, authRoutes);
+app.use('/api/users', apiRateLimiter, userRoutes);
+app.use('/api/payments', apiRateLimiter, paymentRoutes);
+app.use('/api/crisis', apiRateLimiter, crisisRoutes);
+app.use('/api/crisis/chat', chatRateLimiter, crisisChatRoutes);
+app.use('/api/status', apiRateLimiter, statusRoutes);
 
 // Add this debug logging
 console.log('🔍 Registered routes:');
@@ -62,6 +123,15 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('🚨 Server error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
 // Start server
 const startServer = async () => {
   const dbConnected = await testConnection();
@@ -71,9 +141,11 @@ const startServer = async () => {
   }
 
   console.log('JWT_SECRET at runtime:', process.env.JWT_SECRET);
+  console.log('🛡️ Anti-scraping protection enabled');
 
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🛡️ Security features: Helmet, Rate Limiting, Bot Detection, CORS`);
   });
 };
 

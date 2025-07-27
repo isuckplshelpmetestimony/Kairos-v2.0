@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import { Route, Switch, useLocation } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import './lib/anti-scraping'; // Import anti-scraping protection
 
 const AppContent: React.FC = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
