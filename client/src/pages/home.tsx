@@ -85,10 +85,18 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([loadEvents(), loadStartupEvents()]).then(([events1, events2]) => {
-      setAllEvents([...events1, ...events2]);
-      setIsLoading(false);
-    });
+    Promise.all([loadEvents(), loadStartupEvents()])
+      .then(([events1, events2]) => {
+        const allEventsCombined = [...events1, ...events2];
+        setAllEvents(allEventsCombined);
+        console.log(`✅ Loaded ${allEventsCombined.length} events successfully`);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('❌ Error loading events:', error);
+        setAllEvents([]);
+        setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {

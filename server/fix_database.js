@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const connection = require('./database/connection');
 const sql = connection.sql;
 
