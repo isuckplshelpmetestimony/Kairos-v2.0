@@ -163,25 +163,25 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
           />
           {searchMode === 'event' && <SearchSection onSearch={handleSearch} />}
           {searchMode === 'company' && (
-            <div ref={chatRef} id="kairos-chatbox">
-              <AIChatInterface 
-                sessions={sessions}
-                setSessions={setSessions}
-                activeSessionId={activeSessionId}
-                setActiveSessionId={setActiveSessionId}
-                messagesBySession={messagesBySession}
-                setMessagesBySession={setMessagesBySession}
-                loading={loading}
-                setLoading={setLoading}
-                editingSessionId={editingSessionId}
-                setEditingSessionId={setEditingSessionId}
-                editingName={editingName}
-                setEditingName={setEditingName}
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
+              <div ref={chatRef} id="kairos-chatbox">
+                <AIChatInterface 
+                  sessions={sessions}
+                  setSessions={setSessions}
+                  activeSessionId={activeSessionId}
+                  setActiveSessionId={setActiveSessionId}
+                  messagesBySession={messagesBySession}
+                  setMessagesBySession={setMessagesBySession}
+                  loading={loading}
+                  setLoading={setLoading}
+                  editingSessionId={editingSessionId}
+                  setEditingSessionId={setEditingSessionId}
+                  editingName={editingName}
+                  setEditingName={setEditingName}
+                  sidebarOpen={sidebarOpen}
+                  setSidebarOpen={setSidebarOpen}
                 setShowPaymentModal={setShowPaymentModal}
-              />
-            </div>
+                      />
+                    </div>
           )}
         </div>
         <div className="mt-16 px-4">
