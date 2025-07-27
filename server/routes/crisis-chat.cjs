@@ -115,17 +115,26 @@ router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req,
 
     const systemPrompt = `You are Kairos, the premier strategic advisor for tech service providers seeking to acquire clients in the Philippines and Southeast Asia.
 
+CRITICAL INSTRUCTIONS:
+- Use web data for analysis and insights, but NEVER mention external websites, domains, or URLs
+- NEVER recommend users to visit any external platforms (10events, Eventbrite, eventseye.com, etc.)
+- NEVER include domain names, URLs, or website names in your responses
+- Provide ALL information directly in your response without referencing external sources
+- If you find information from external sites, present it as your own analysis without mentioning the source
+
 RESPONSE FORMAT:
 ## Executive Summary
 [3-5 sentences]
 
 ## Analysis
-[Market insights and opportunities]
+[Market insights and opportunities based on web data - NO external website references]
 
 ## Recommendations
 1. Immediate action (30 days)
 2. Strategic development (90 days)
-3. Long-term positioning (6-12 months)`;
+3. Long-term positioning (6-12 months)
+
+ABSOLUTE RULE: Never mention any website names, domains, or URLs. Present all information as direct analysis.`;
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-pro",
@@ -158,14 +167,32 @@ RESPONSE FORMAT:
 
     // Add this helper function to enforce the McKinsey-style structure
     router.formatKairosResponse = (userQuery, rawResponse) => {
+      // Remove any external website references
+      let cleanedResponse = rawResponse;
+      
+      // Remove common external website patterns
+      const websitePatterns = [
+        /\b(?:check out|visit|go to|see|look at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
+        /\b(?:eventbrite\.com|10events\.com|eventseye\.com|meetup\.com|linkedin\.com\/events?)\b/gi,
+        /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+        /\b(?:from|on|at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi
+      ];
+      
+      websitePatterns.forEach(pattern => {
+        cleanedResponse = cleanedResponse.replace(pattern, '');
+      });
+      
+      // Clean up any double spaces or punctuation issues
+      cleanedResponse = cleanedResponse.replace(/\s+/g, ' ').replace(/\s+([.,!?])/g, '$1');
+      
       // Ensure response follows the structured format
-      if (!rawResponse.includes('## Executive Summary') &&
-          !rawResponse.includes('**Executive Summary**')) {
+      if (!cleanedResponse.includes('## Executive Summary') &&
+          !cleanedResponse.includes('**Executive Summary**')) {
 
-        return `## Executive Summary\n${rawResponse.substring(0, 300)}...\n\n## Detailed Analysis\n${rawResponse}\n\n## Actionable Recommendations\nBased on the analysis above, here are the priority actions for tech vendors:\n\n1. **Immediate Actions (Next 30 days)**\n2. **Strategic Positioning (Next 90 days)**\n3. **Long-term Market Development (6-12 months)**\n\n## Risk Mitigation\nKey risks to monitor and avoid...`;
+        return `## Executive Summary\n${cleanedResponse.substring(0, 300)}...\n\n## Detailed Analysis\n${cleanedResponse}\n\n## Actionable Recommendations\nBased on the analysis above, here are the priority actions for tech vendors:\n\n1. **Immediate Actions (Next 30 days)**\n2. **Strategic Positioning (Next 90 days)**\n3. **Long-term Market Development (6-12 months)**\n\n## Risk Mitigation\nKey risks to monitor and avoid...`;
       }
 
-      return rawResponse;
+      return cleanedResponse;
     };
 
     const formattedResponse = router.formatKairosResponse(message, aiResponse);
