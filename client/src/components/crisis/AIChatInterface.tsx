@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const SUGGESTED_PROMPTS = [
   "Show me upcoming tech conferences in Metro Manila",
@@ -342,13 +343,80 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                 key={msg.id}
                 className={
                   msg.type === 'user'
-                    ? 'self-end max-w-[75%] bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-lg font-medium text-base'
-                    : 'self-start max-w-[75%] glass-effect border border-white/10 text-blue-100 px-5 py-3 rounded-2xl shadow-md font-medium text-base'
+                    ? 'self-end max-w-[85%] bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-3 rounded-2xl shadow-lg font-medium text-base'
+                    : 'self-start max-w-[90%] glass-effect border border-white/10 text-blue-100 px-5 py-3 rounded-2xl shadow-md font-medium text-base'
                 }
                 style={{ wordBreak: 'break-word' }}
               >
                 {msg.type === 'ai' ? (
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      table: ({node, ...props}) => (
+                        <div className="overflow-x-auto my-4">
+                          <table className="min-w-full border-collapse border border-gray-600 bg-gray-800 rounded-lg" {...props} />
+                        </div>
+                      ),
+                      thead: ({node, ...props}) => (
+                        <thead className="bg-gray-700" {...props} />
+                      ),
+                      tbody: ({node, ...props}) => (
+                        <tbody className="bg-gray-800" {...props} />
+                      ),
+                      tr: ({node, ...props}) => (
+                        <tr className="border-b border-gray-600 hover:bg-gray-700" {...props} />
+                      ),
+                      th: ({node, ...props}) => (
+                        <th className="px-4 py-2 text-left text-white font-semibold border-r border-gray-600" {...props} />
+                      ),
+                      td: ({node, ...props}) => (
+                        <td className="px-4 py-2 text-gray-200 border-r border-gray-600" {...props} />
+                      ),
+                      code: ({node, inline, className, children, ...props}: any) => (
+                        inline ? 
+                          <code className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code> :
+                          <code className="block bg-gray-700 p-3 rounded text-sm font-mono overflow-x-auto" {...props}>{children}</code>
+                      ),
+                      pre: ({node, ...props}) => (
+                        <pre className="bg-gray-700 p-3 rounded text-sm font-mono overflow-x-auto my-2" {...props} />
+                      ),
+                      blockquote: ({node, ...props}) => (
+                        <blockquote className="border-l-4 border-purple-500 pl-4 my-2 italic text-gray-300" {...props} />
+                      ),
+                      ul: ({node, ...props}) => (
+                        <ul className="list-disc list-inside my-2 space-y-1" {...props} />
+                      ),
+                      ol: ({node, ...props}) => (
+                        <ol className="list-decimal list-inside my-2 space-y-1" {...props} />
+                      ),
+                      li: ({node, ...props}) => (
+                        <li className="text-gray-200" {...props} />
+                      ),
+                      h1: ({node, ...props}) => (
+                        <h1 className="text-2xl font-bold text-white my-4" {...props} />
+                      ),
+                      h2: ({node, ...props}) => (
+                        <h2 className="text-xl font-bold text-white my-3" {...props} />
+                      ),
+                      h3: ({node, ...props}) => (
+                        <h3 className="text-lg font-bold text-white my-2" {...props} />
+                      ),
+                      h4: ({node, ...props}) => (
+                        <h4 className="text-base font-bold text-white my-2" {...props} />
+                      ),
+                      p: ({node, ...props}) => (
+                        <p className="my-2 leading-relaxed" {...props} />
+                      ),
+                      strong: ({node, ...props}) => (
+                        <strong className="font-bold text-white" {...props} />
+                      ),
+                      em: ({node, ...props}) => (
+                        <em className="italic text-gray-300" {...props} />
+                      ),
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 ) : (
                   msg.content
                 )}
