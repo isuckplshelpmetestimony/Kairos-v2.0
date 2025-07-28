@@ -235,11 +235,11 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     setHasInteracted(true);
 
     try {
-      const response = await fetch('/api/crisis/chat', {
+      const response = await fetch('http://localhost:3001/api/crisis/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({
           message: inputValue,
@@ -255,7 +255,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: data.response,
+        content: data.ai_response,
         timestamp: new Date()
       };
 
@@ -475,7 +475,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
           
           {/* Chat messages area - scrollable, triggers prompt visibility */}
           <div ref={chatScrollRef} onScroll={handleChatScroll} className="flex-1 overflow-y-auto mb-3 flex flex-col gap-3 pr-1" style={{ minHeight: 0 }}>
-            {currentMessages.map(msg => (
+            <div className="flex flex-col gap-3">
+              {currentMessages.map(msg => (
               <div
                 key={msg.id}
                 className={
@@ -491,23 +492,23 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                     components={{
                       table: ({node, ...props}) => (
                         <div className="overflow-x-auto my-4">
-                          <table className="min-w-full border-collapse border border-gray-600 bg-gray-800 rounded-lg" {...props} />
+                          <table className="min-w-full border-collapse border border-gray-500 bg-gray-800/50 rounded-lg shadow-lg" {...props} />
                         </div>
                       ),
                       thead: ({node, ...props}) => (
-                        <thead className="bg-gray-700" {...props} />
+                        <thead className="bg-gray-700/70" {...props} />
                       ),
                       tbody: ({node, ...props}) => (
-                        <tbody className="bg-gray-800" {...props} />
+                        <tbody className="bg-gray-800/30" {...props} />
                       ),
                       tr: ({node, ...props}) => (
-                        <tr className="border-b border-gray-600 hover:bg-gray-700" {...props} />
+                        <tr className="border-b border-gray-500 hover:bg-gray-700/50" {...props} />
                       ),
                       th: ({node, ...props}) => (
-                        <th className="px-4 py-2 text-left text-white font-semibold border-r border-gray-600" {...props} />
+                        <th className="px-4 py-3 text-left text-white font-semibold border-r border-gray-500" {...props} />
                       ),
                       td: ({node, ...props}) => (
-                        <td className="px-4 py-2 text-gray-200 border-r border-gray-600" {...props} />
+                        <td className="px-4 py-3 text-gray-200 border-r border-gray-500" {...props} />
                       ),
                       code: ({node, inline, className, children, ...props}: any) => (
                         inline ? 
@@ -542,10 +543,10 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                         <h4 className="text-base font-bold text-white my-2" {...props} />
                       ),
                       p: ({node, ...props}) => (
-                        <p className="my-2 leading-relaxed" {...props} />
+                        <p className="my-3 leading-relaxed text-gray-100" {...props} />
                       ),
                       strong: ({node, ...props}) => (
-                        <strong className="font-bold text-white" {...props} />
+                        <strong className="font-semibold text-blue-100" {...props} />
                       ),
                       em: ({node, ...props}) => (
                         <em className="italic text-gray-300" {...props} />
@@ -559,6 +560,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                 )}
               </div>
             ))}
+            </div>
             {loading && <div className="text-gray-400">Kairos is thinking...</div>}
             <div ref={chatEndRef} />
           </div>

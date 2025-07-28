@@ -10,7 +10,7 @@ const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-router.post('/chat', authenticateToken, requireAuth, requirePremium, async (req, res) => {
+router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res) => {
   const performanceTimer = {
     start: Date.now(),
     shouldScrape: 0,
