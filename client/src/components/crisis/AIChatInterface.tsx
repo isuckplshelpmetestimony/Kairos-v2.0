@@ -70,6 +70,16 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const authToken = localStorage.getItem('auth_token');
+    if (!authToken) {
+      console.log('No auth token found, redirecting to login');
+      window.location.href = '/login';
+      return;
+    }
+  }, []);
+
   // Check if user has access to chat features
   const hasChatAccess = () => {
     if (config.DISABLE_PREMIUM_REQUIREMENTS) return true;
@@ -236,11 +246,17 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
 
     try {
       const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api/crisis/chat' : 'https://kairos-v2-0.onrender.com/api/crisis/chat';
+      const authToken = localStorage.getItem('auth_token');
+      
+      if (!authToken) {
+        throw new Error('Authentication required. Please log in.');
+      }
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           message: inputValue,
@@ -249,6 +265,9 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Authentication required. Please log in.');
+        }
         throw new Error('Failed to send message');
       }
 
@@ -265,6 +284,13 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
       const errorMsg: ChatMessage = { type: 'ai', content: 'Error: ' + error.message, id: (Date.now() + 1).toString(), timestamp: new Date() };
       setActiveSessionMessages(prev => [...prev, errorMsg]);
       console.error('Chat error:', error);
+      
+      // If authentication error, redirect to login
+      if (error.message.includes('Authentication required')) {
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      }
     }
     setLoading(false);
   };
