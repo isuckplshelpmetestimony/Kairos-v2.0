@@ -46,11 +46,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (response.data) {
           setUser(response.data.user);
           localStorage.setItem('kairos_user', JSON.stringify(response.data.user));
+          localStorage.setItem('user_email', response.data.user.email);
         } else {
           // Token invalid, clear localStorage
           setUser(null);
           localStorage.removeItem('auth_token');
           localStorage.removeItem('kairos_user');
+          localStorage.removeItem('user_email');
         }
       } else {
         setUser(null);
@@ -79,9 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (verifyResponse.data) {
           setUser(verifyResponse.data.user);
           localStorage.setItem('kairos_user', JSON.stringify(verifyResponse.data.user));
+          localStorage.setItem('user_email', verifyResponse.data.user.email);
         } else {
           setUser(user);
           localStorage.setItem('kairos_user', JSON.stringify(user));
+          localStorage.setItem('user_email', user.email);
         }
         return true;
       }
@@ -106,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Store user
         setUser(user);
         localStorage.setItem('kairos_user', JSON.stringify(user));
+        localStorage.setItem('user_email', user.email);
       return true;
       }
       return false;
@@ -119,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('kairos_user');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_email');
   };
 
   const isAdmin = () => {

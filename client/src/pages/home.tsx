@@ -31,14 +31,16 @@ export interface ChatSession {
 }
 
 const getInitialSessions = (): ChatSession[] => {
-  const stored = localStorage.getItem('kairos_chat_sessions');
+  const userEmail = localStorage.getItem('user_email') || 'anonymous';
+  const stored = localStorage.getItem(`kairos_chat_sessions_${userEmail}`);
   if (stored) return JSON.parse(stored);
   const id = `session_${Date.now()}`;
   return [{ id, title: 'New Chat', createdAt: new Date().toISOString() }];
 };
 
 const getInitialMessages = (): Record<string, ChatMessage[]> => {
-  const stored = localStorage.getItem('kairos_chat_messages');
+  const userEmail = localStorage.getItem('user_email') || 'anonymous';
+  const stored = localStorage.getItem(`kairos_chat_messages_${userEmail}`);
   if (stored) return JSON.parse(stored);
   return {};
 };
@@ -77,10 +79,12 @@ export default function Home({ user, premiumUsers, setShowPaymentModal, showPaym
 
   // Persist sessions/messages
   useEffect(() => {
-    localStorage.setItem('kairos_chat_sessions', JSON.stringify(sessions));
+    const userEmail = localStorage.getItem('user_email') || 'anonymous';
+    localStorage.setItem(`kairos_chat_sessions_${userEmail}`, JSON.stringify(sessions));
   }, [sessions]);
   useEffect(() => {
-    localStorage.setItem('kairos_chat_messages', JSON.stringify(messagesBySession));
+    const userEmail = localStorage.getItem('user_email') || 'anonymous';
+    localStorage.setItem(`kairos_chat_messages_${userEmail}`, JSON.stringify(messagesBySession));
   }, [messagesBySession]);
 
   useEffect(() => {
