@@ -183,7 +183,7 @@ class KnowledgeRetrieval {
               console.log('🔍 DEBUG: ❌ Detected blocked content, using fallback');
               // Don't include blocked content, use fallback instead
               try {
-                const fallbackData = await this.getContextualData(conversationState);
+                const fallbackData = await KnowledgeRetrieval.getContextualData(conversationState);
                 if (fallbackData && fallbackData.companies) {
                   data.webContent = `Based on available data: ${fallbackData.companies.map(c => c.name).join(', ')}`;
                   console.log('🔍 DEBUG: ✅ Fallback data used instead of blocked content');
@@ -204,7 +204,7 @@ class KnowledgeRetrieval {
             console.log('🔍 DEBUG: ❌ No web content found, trying fallback sources');
             try {
               // Try to get relevant data from database as fallback
-              const fallbackData = await this.getContextualData(conversationState);
+              const fallbackData = await KnowledgeRetrieval.getContextualData(conversationState);
               if (fallbackData && fallbackData.companies) {
                 data.webContent = `Based on available data: ${fallbackData.companies.map(c => c.name).join(', ')}`;
                 console.log('🔍 DEBUG: ✅ Fallback data used');
