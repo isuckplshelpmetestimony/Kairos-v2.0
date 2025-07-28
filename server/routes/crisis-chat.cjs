@@ -21,6 +21,12 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
   };
 
   console.log('req.user in chat:', req.user);
+  
+  // Clear any cached data to prevent session issues
+  if (req.session) {
+    req.session.touch();
+  }
+  
   try {
     const { message, session_id } = req.body;
     const userId = req.user.id;
@@ -207,7 +213,32 @@ Your analysis introduction paragraph here.
     });
     console.log('🔍 DEBUG: Calling Gemini with prompt...');
     const geminiStart = Date.now();
-    const result = await model.generateContent(enhancedPrompt);
+    
+    // Add retry logic for Gemini API
+    let result;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        result = await model.generateContent(enhancedPrompt);
+        break; // Success, exit retry loop
+      } catch (error) {
+        retryCount++;
+        console.log(`🔍 DEBUG: Gemini API attempt ${retryCount} failed:`, error.message);
+        
+        if (error.status === 503 && retryCount < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          console.log(`🔍 DEBUG: Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        } else {
+          // Either not a 503 error or max retries reached
+          throw error;
+        }
+      }
+    }
+    
     const aiResponse = result.response.text();
     performanceTimer.geminiAPI = Date.now() - geminiStart;
     console.log('🔍 DEBUG: ✅ Gemini response received, length:', aiResponse.length);
@@ -266,7 +297,22 @@ Your analysis introduction paragraph here.
     });
   } catch (error) {
     console.error('Enhanced chat error:', error);
-    res.status(500).json({ error: 'I encountered an error processing your request. Please try again.' });
+    
+    // Provide specific error messages based on error type
+    let errorMessage = 'I encountered an error processing your request. Please try again.';
+    
+    if (error.status === 503) {
+      errorMessage = 'The AI service is temporarily overloaded. Please try again in a few moments.';
+    } else if (error.message && error.message.includes('API key')) {
+      errorMessage = 'Authentication error with AI service. Please contact support.';
+    } else if (error.message && error.message.includes('quota')) {
+      errorMessage = 'AI service quota exceeded. Please try again later.';
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
