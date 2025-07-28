@@ -1,7 +1,15 @@
 // Configuration for Kairos application
+const getApiBaseUrl = () => {
+  // Check if we're in development (localhost) or production
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:3001/api';
+  }
+  return 'https://kairos-v2-0.onrender.com/api';
+};
+
 export const config = {
   // API Configuration
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  apiBaseUrl: getApiBaseUrl(),
   
   // Feature Flags
   DISABLE_PREMIUM_REQUIREMENTS: false, // Set to false to enable paywall and blur effects

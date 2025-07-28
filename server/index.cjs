@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 3001;
 
 // CORS configuration - MUST BE FIRST
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://kairos-v2-0.onrender.com'],
   credentials: true
 }));
 
