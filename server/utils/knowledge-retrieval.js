@@ -1,14 +1,6 @@
 const { sql } = require('../database/connection');
 const axios = require('axios');
 
-// Import fetch for Node.js compatibility
-let fetch;
-if (typeof globalThis.fetch === 'undefined') {
-  fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-} else {
-  fetch = globalThis.fetch;
-}
-
 class KnowledgeRetrieval {
   static async fetchRelevantData(intent, strategy, conversationState) {
     const dataNeeds = strategy.data_needed;

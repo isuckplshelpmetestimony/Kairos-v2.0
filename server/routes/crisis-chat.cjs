@@ -342,7 +342,7 @@ Your analysis introduction paragraph here.
     // Provide specific error messages based on error type
     let errorMessage = 'I encountered an error processing your request. Please try again.';
 
-    if (error.status === 503) {
+    if (error.status === 503 || (error.message && error.message.includes('overloaded'))) {
       errorMessage = 'The AI service is temporarily overloaded. Please try again in a few moments.';
     } else if (error.message && error.message.includes('API key')) {
       errorMessage = 'Authentication error with AI service. Please contact support.';
@@ -471,6 +471,12 @@ router.extractSourcesSummary = (webData) => {
 
 router.saveChatConversation = async (userId, message, response, sessionId) => {
   try {
+    // Only save if we have a valid user ID
+    if (!userId) {
+      console.log('⚠️ Skipping chat save - no user ID provided');
+      return;
+    }
+
     await sql`
       INSERT INTO crisis_chat_conversations
       (company_id, user_id, message_content, message_type, session_id)
