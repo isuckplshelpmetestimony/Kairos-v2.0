@@ -165,8 +165,40 @@ class KnowledgeRetrieval {
           }
           
           if (webContent) {
-            data.webContent = webContent;
-            console.log('🔍 DEBUG: ✅ Web content successfully added to data');
+            // Check if the content is blocked/error content
+            const blockedPatterns = [
+              /sorry, you have been blocked/i,
+              /please enable cookies/i,
+              /access denied/i,
+              /blocked by security/i,
+              /cloudflare/i,
+              /captcha/i,
+              /robot/i,
+              /automated access/i
+            ];
+            
+            const isBlockedContent = blockedPatterns.some(pattern => pattern.test(webContent));
+            
+            if (isBlockedContent) {
+              console.log('🔍 DEBUG: ❌ Detected blocked content, using fallback');
+              // Don't include blocked content, use fallback instead
+              try {
+                const fallbackData = await this.getContextualData(conversationState);
+                if (fallbackData && fallbackData.companies) {
+                  data.webContent = `Based on available data: ${fallbackData.companies.map(c => c.name).join(', ')}`;
+                  console.log('🔍 DEBUG: ✅ Fallback data used instead of blocked content');
+                } else {
+                  data.webContent = 'Unable to fetch live web data due to website protection. Using available database information.';
+                  console.log('🔍 DEBUG: ❌ No fallback data available');
+                }
+              } catch (fallbackError) {
+                data.webContent = 'Unable to fetch live web data due to website protection. Using available database information.';
+                console.log('🔍 DEBUG: ❌ Fallback also failed:', fallbackError.message);
+              }
+            } else {
+              data.webContent = webContent;
+              console.log('🔍 DEBUG: ✅ Web content successfully added to data');
+            }
           } else {
             // Fallback: Try alternative data sources when scraping fails
             console.log('🔍 DEBUG: ❌ No web content found, trying fallback sources');
