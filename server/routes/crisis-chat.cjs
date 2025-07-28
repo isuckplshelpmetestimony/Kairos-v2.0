@@ -35,7 +35,40 @@ router.formatKairosResponse = (userQuery, rawResponse) => {
   return cleanedResponse;
 };
 
+// Add this test route to verify server functionality
+router.get('/test', (req, res) => {
+  console.log('🧪 Test endpoint called');
+  res.json({ 
+    status: 'Server is running',
+    timestamp: new Date().toISOString(),
+    nodeVersion: process.version,
+    environment: process.env.NODE_ENV,
+    database: process.env.DATABASE_URL ? 'Configured' : 'Missing',
+    gemini: process.env.GEMINI_API_KEY ? 'Configured' : 'Missing',
+    jwt: process.env.JWT_SECRET ? 'Configured' : 'Missing'
+  });
+});
+
 router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res) => {
+  console.log('🚀 KAIROS Chat Request Started');
+  console.log('📊 User ID:', req.user?.id);
+  console.log('📋 Request Body:', JSON.stringify(req.body, null, 2));
+  console.log('🌍 Environment:', process.env.NODE_ENV);
+  console.log('🔑 Auth Token Present:', !!req.headers.authorization);
+  
+  // Check critical environment variables
+  console.log('🔧 Environment Check:', {
+    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'Set' : 'Missing',
+    JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Missing',
+    FIRECRAWL_URL: process.env.FIRECRAWL_URL ? 'Set' : 'Missing'
+  });
+  
+  // Clear any cached data to prevent session issues
+  if (req.session) {
+    req.session.touch();
+  }
+
   const performanceTimer = {
     start: Date.now(),
     shouldScrape: 0,
@@ -45,13 +78,6 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
     total: 0
   };
 
-  console.log('req.user in chat:', req.user);
-  
-  // Clear any cached data to prevent session issues
-  if (req.session) {
-    req.session.touch();
-  }
-  
   try {
     const { message, session_id } = req.body;
     const userId = req.user.id;
@@ -296,20 +322,39 @@ Your analysis introduction paragraph here.
       session_id: sessionId
     });
   } catch (error) {
-    console.error('Enhanced chat error:', error);
-    
+    console.error('❌ KAIROS CHAT ERROR:', error);
+    console.error('❌ Error Stack:', error.stack);
+    console.error('❌ Error Details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      status: error.status,
+      statusText: error.statusText
+    });
+    console.error('❌ Request Context:', {
+      userId: req.user?.id,
+      userEmail: req.user?.email,
+      method: req.method,
+      url: req.url,
+      headers: Object.keys(req.headers)
+    });
+
     // Provide specific error messages based on error type
     let errorMessage = 'I encountered an error processing your request. Please try again.';
-    
+
     if (error.status === 503) {
       errorMessage = 'The AI service is temporarily overloaded. Please try again in a few moments.';
     } else if (error.message && error.message.includes('API key')) {
       errorMessage = 'Authentication error with AI service. Please contact support.';
     } else if (error.message && error.message.includes('quota')) {
       errorMessage = 'AI service quota exceeded. Please try again later.';
+    } else if (error.message && error.message.includes('fetch')) {
+      errorMessage = 'Network error occurred. Please check your connection and try again.';
+    } else if (error.message && error.message.includes('database')) {
+      errorMessage = 'Database connection error. Please try again later.';
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
