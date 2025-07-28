@@ -235,7 +235,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     setHasInteracted(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/crisis/chat', {
+      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api/crisis/chat' : 'https://kairos-v2-0.onrender.com/api/crisis/chat';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
