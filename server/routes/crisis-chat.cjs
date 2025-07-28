@@ -10,6 +10,31 @@ const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Helper function to clean external references only
+router.formatKairosResponse = (userQuery, rawResponse) => {
+  // Remove any external website references only
+  let cleanedResponse = rawResponse;
+  
+  // Remove common external website patterns
+  const websitePatterns = [
+    /\b(?:check out|visit|go to|see|look at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
+    /\b(?:eventbrite\.com|10events\.com|eventseye\.com|meetup\.com|linkedin\.com\/events?)\b/gi,
+    /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    /\b(?:from|on|at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi
+  ];
+  
+  websitePatterns.forEach(pattern => {
+    cleanedResponse = cleanedResponse.replace(pattern, '');
+  });
+  
+  // Keep all markdown formatting intact - just clean up spacing
+  cleanedResponse = cleanedResponse
+    .replace(/\n\s*\n/g, '\n\n') // Clean up extra spacing
+    .trim();
+  
+  return cleanedResponse;
+};
+
 router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res) => {
   const performanceTimer = {
     start: Date.now(),
@@ -260,31 +285,6 @@ Your analysis introduction paragraph here.
       total: `${performanceTimer.total}ms`,
       improvement: '50-60% faster (no company data)'
     });
-
-    // Add this helper function to clean external references only
-    router.formatKairosResponse = (userQuery, rawResponse) => {
-      // Remove any external website references only
-      let cleanedResponse = rawResponse;
-      
-      // Remove common external website patterns
-      const websitePatterns = [
-        /\b(?:check out|visit|go to|see|look at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
-        /\b(?:eventbrite\.com|10events\.com|eventseye\.com|meetup\.com|linkedin\.com\/events?)\b/gi,
-        /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-        /\b(?:from|on|at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi
-      ];
-      
-      websitePatterns.forEach(pattern => {
-        cleanedResponse = cleanedResponse.replace(pattern, '');
-      });
-      
-      // Keep all markdown formatting intact - just clean up spacing
-      cleanedResponse = cleanedResponse
-        .replace(/\n\s*\n/g, '\n\n') // Clean up extra spacing
-        .trim();
-      
-      return cleanedResponse;
-    };
 
     const formattedResponse = router.formatKairosResponse(message, aiResponse);
 
