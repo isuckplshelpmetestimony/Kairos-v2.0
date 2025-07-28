@@ -23,11 +23,9 @@ const industries = [
   'Banking & Financial Services',
   'Healthcare',
   'Agriculture',
-  'Logistics & Supply Chain',
   'Manufacturing',
   'Education',
   'Real Estate & Construction',
-  'Transportation',
   'Utilities',
   'Tourism',
 ];
