@@ -268,7 +268,14 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         if (response.status === 401 || response.status === 403) {
           throw new Error('Authentication required. Please log in.');
         }
-        throw new Error('Failed to send message');
+        
+        // Try to get the server's error message
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to send message');
+        } catch (parseError) {
+          throw new Error('Failed to send message');
+        }
       }
 
       const data = await response.json();
@@ -281,7 +288,17 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
 
       setActiveSessionMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
-      const errorMsg: ChatMessage = { type: 'ai', content: 'Error: ' + error.message, id: (Date.now() + 1).toString(), timestamp: new Date() };
+      // Show the server's enhanced error message if available
+      const errorContent = error.message.includes('Failed to send message') 
+        ? 'The AI service is experiencing high demand right now. Please try again in 2-3 minutes, or ask a more specific question.'
+        : error.message;
+        
+      const errorMsg: ChatMessage = { 
+        type: 'ai', 
+        content: errorContent, 
+        id: (Date.now() + 1).toString(), 
+        timestamp: new Date() 
+      };
       setActiveSessionMessages(prev => [...prev, errorMsg]);
       console.error('Chat error:', error);
       
