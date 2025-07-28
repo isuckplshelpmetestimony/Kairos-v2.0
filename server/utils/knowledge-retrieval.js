@@ -29,14 +29,29 @@ class KnowledgeRetrieval {
           if (urlMatch) {
             console.log('🔍 Direct URL Request:', { url: urlMatch[0], endpoint: `${firecrawlUrl}/v0/scrape` });
             
-            // Try primary method with correct endpoint
+            // Try primary method with correct endpoint and enhanced anti-bot bypass
             try {
               const response = await fetch(`${firecrawlUrl}/v0/scrape`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                  'Accept-Language': 'en-US,en;q=0.5',
+                  'Accept-Encoding': 'gzip, deflate, br',
+                  'DNT': '1',
+                  'Connection': 'keep-alive',
+                  'Upgrade-Insecure-Requests': '1'
+                },
                 body: JSON.stringify({ 
                   url: urlMatch[0],
-                  formats: ['markdown', 'html']
+                  formats: ['markdown', 'html'],
+                  onlyMainContent: true,
+                  waitFor: 3000, // Wait 3 seconds for dynamic content
+                  timeout: 30000, // 30 second timeout
+                  mobile: false, // Use desktop user agent
+                  skipTlsVerification: false,
+                  removeBase64Images: true
                 })
               });
               
@@ -100,7 +115,13 @@ class KnowledgeRetrieval {
               }
             };
             const requestHeaders = {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'DNT': '1',
+              'Connection': 'keep-alive'
             };
             
             console.log('🔍 Firecrawl Request:', {
@@ -110,7 +131,13 @@ class KnowledgeRetrieval {
               body: JSON.stringify(requestBody)
             });
             
-            const searchResponse = await axios.post(`${firecrawlUrl}/v1/search`, requestBody, { headers: requestHeaders });
+            // Add delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const searchResponse = await axios.post(`${firecrawlUrl}/v1/search`, requestBody, { 
+              headers: requestHeaders,
+              timeout: 30000 // 30 second timeout
+            });
             
             console.log('🔍 Firecrawl Raw Response:', {
               status: searchResponse.status,
@@ -141,13 +168,48 @@ class KnowledgeRetrieval {
             data.webContent = webContent;
             console.log('🔍 DEBUG: ✅ Web content successfully added to data');
           } else {
-            data.webContent = 'Failed to fetch live web data.';
-            console.log('🔍 DEBUG: ❌ No web content found, using fallback message');
+            // Fallback: Try alternative data sources when scraping fails
+            console.log('🔍 DEBUG: ❌ No web content found, trying fallback sources');
+            try {
+              // Try to get relevant data from database as fallback
+              const fallbackData = await this.getContextualData(conversationState);
+              if (fallbackData && fallbackData.companies) {
+                data.webContent = `Based on available data: ${fallbackData.companies.map(c => c.name).join(', ')}`;
+                console.log('🔍 DEBUG: ✅ Fallback data used');
+              } else {
+                data.webContent = 'Unable to fetch live web data at this time. Please try again later.';
+                console.log('🔍 DEBUG: ❌ No fallback data available');
+              }
+            } catch (fallbackError) {
+              data.webContent = 'Unable to fetch live web data at this time. Please try again later.';
+              console.log('🔍 DEBUG: ❌ Fallback also failed:', fallbackError.message);
+            }
           }
         } catch (err) {
           console.error('🔍 DEBUG: Firecrawl error:', err.message);
           console.error('🔍 DEBUG: Full error:', err);
-          data.webContent = 'Error fetching live web data.';
+          
+          // Provide more specific error messages
+          if (err.response) {
+            console.log('🔍 DEBUG: Response status:', err.response.status);
+            console.log('🔍 DEBUG: Response data:', err.response.data);
+            
+            if (err.response.status === 403) {
+              data.webContent = 'The requested website has anti-bot protection. This is common with modern websites.';
+            } else if (err.response.status === 429) {
+              data.webContent = 'Rate limit exceeded. Please try again in a few minutes.';
+            } else if (err.response.status === 404) {
+              data.webContent = 'The requested website could not be found.';
+            } else {
+              data.webContent = `Error fetching web data (${err.response.status}). Please try again later.`;
+            }
+          } else if (err.code === 'ECONNREFUSED') {
+            data.webContent = 'Unable to connect to the web scraping service.';
+          } else if (err.code === 'ETIMEDOUT') {
+            data.webContent = 'Request timed out. The website may be slow or unavailable.';
+          } else {
+            data.webContent = 'Error fetching live web data. Please try again later.';
+          }
         }
       } else {
         console.log('🔍 DEBUG: Web scraping not triggered - intent or pattern not matched');
