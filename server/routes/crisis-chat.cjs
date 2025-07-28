@@ -56,6 +56,22 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
   console.log('🌍 Environment:', process.env.NODE_ENV);
   console.log('🔑 Auth Token Present:', !!req.headers.authorization);
   
+  // Simple rate limiting for API overload protection
+  const userId = req.user?.id;
+  const now = Date.now();
+  const userRequests = router.userRequestTimestamps || {};
+  
+  if (userRequests[userId] && (now - userRequests[userId]) < 3000) {
+    console.log('⚠️ Rate limiting user', userId, '- too many requests');
+    return res.status(429).json({
+      error: 'Please wait a few seconds before making another request. The AI service is experiencing high demand.',
+      retry_after: 3
+    });
+  }
+  
+  userRequests[userId] = now;
+  router.userRequestTimestamps = userRequests;
+  
   // Check critical environment variables
   console.log('🔧 Environment Check:', {
     DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
@@ -265,10 +281,10 @@ Your analysis introduction paragraph here.
     console.log('🔍 DEBUG: Calling Gemini with prompt...');
     const geminiStart = Date.now();
     
-    // Add retry logic for Gemini API
+    // Enhanced retry logic for Gemini API with better overload handling
     let result;
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = 5; // Increased from 3 to 5
     
     while (retryCount < maxRetries) {
       try {
@@ -279,8 +295,8 @@ Your analysis introduction paragraph here.
         console.log(`🔍 DEBUG: Gemini API attempt ${retryCount} failed:`, error.message);
         
         if (error.status === 503 && retryCount < maxRetries) {
-          // Wait before retrying (exponential backoff)
-          const waitTime = Math.pow(2, retryCount) * 1000;
+          // Enhanced exponential backoff with longer waits
+          const waitTime = Math.pow(2, retryCount) * 3000; // Increased from 1000 to 3000
           console.log(`🔍 DEBUG: Waiting ${waitTime}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         } else {
@@ -288,6 +304,37 @@ Your analysis introduction paragraph here.
           throw error;
         }
       }
+    }
+    
+    // If all retries failed due to overload, provide helpful fallback
+    if (retryCount >= maxRetries) {
+      console.log(`🔍 DEBUG: All ${maxRetries} Gemini API attempts failed, providing fallback response`);
+      
+      const fallbackResponse = {
+        ai_response: `**Service Temporarily Unavailable**
+
+I'm experiencing high demand right now and unable to process your request. This is a temporary issue that should resolve in a few minutes.
+
+**What you can do:**
+• Try again in 2-3 minutes
+• Ask a more specific question
+• Break your question into smaller parts
+• Check back during off-peak hours
+
+**Alternative:** You can search for events manually on platforms like Eventbrite, Meetup, or industry association websites.
+
+I apologize for the inconvenience and appreciate your patience!`,
+        response_time_ms: Date.now() - geminiStart,
+        suggested_followups: [
+          "Try asking about general tech conferences",
+          "Search for events in a specific city",
+          "Ask about a specific industry or technology"
+        ],
+        sources_used: [],
+        session_id: sessionId
+      };
+      
+      return res.json(fallbackResponse);
     }
     
     const aiResponse = result.response.text();
@@ -343,7 +390,7 @@ Your analysis introduction paragraph here.
     let errorMessage = 'I encountered an error processing your request. Please try again.';
 
     if (error.status === 503 || (error.message && error.message.includes('overloaded'))) {
-      errorMessage = 'The AI service is temporarily overloaded. Please try again in a few moments.';
+      errorMessage = 'The AI service is experiencing high demand right now. Please try again in 2-3 minutes, or ask a more specific question. You can also try breaking your question into smaller parts.';
     } else if (error.message && error.message.includes('API key')) {
       errorMessage = 'Authentication error with AI service. Please contact support.';
     } else if (error.message && error.message.includes('quota')) {
