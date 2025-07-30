@@ -77,7 +77,8 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
     DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
     GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'Set' : 'Missing',
     JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Missing',
-    FIRECRAWL_URL: process.env.FIRECRAWL_URL ? 'Set' : 'Missing'
+    FIRECRAWL_URL: process.env.FIRECRAWL_URL ? 'Set' : 'Missing',
+    FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY ? 'Set' : 'Missing'
   });
   
   // Clear any cached data to prevent session issues

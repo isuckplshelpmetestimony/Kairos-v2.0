@@ -23,7 +23,9 @@ class KnowledgeRetrieval {
         // Enhanced web scraping logic
         try {
           const firecrawlUrl = process.env.FIRECRAWL_URL;
+          const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
           console.log('🔍 DEBUG: Firecrawl URL:', firecrawlUrl);
+          console.log('🔍 DEBUG: Firecrawl API Key:', firecrawlApiKey ? 'Set' : 'Missing');
           let webContent = '';
           
           if (urlMatch) {
@@ -35,6 +37,7 @@ class KnowledgeRetrieval {
                 method: 'POST',
                 headers: { 
                   'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${firecrawlApiKey}`,
                   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                   'Accept-Language': 'en-US,en;q=0.5',
@@ -92,6 +95,11 @@ class KnowledgeRetrieval {
                 const axiosResponse = await axios.post(`${firecrawlUrl}/v0/scrape`, {
                   url: urlMatch[0],
                   formats: ['markdown', 'html']
+                }, {
+                  headers: {
+                    'Authorization': `Bearer ${firecrawlApiKey}`,
+                    'Content-Type': 'application/json'
+                  }
                 });
                 
                 if (axiosResponse.data && axiosResponse.data.success) {
@@ -116,6 +124,7 @@ class KnowledgeRetrieval {
             };
             const requestHeaders = {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${firecrawlApiKey}`,
               'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
               'Accept-Language': 'en-US,en;q=0.5',

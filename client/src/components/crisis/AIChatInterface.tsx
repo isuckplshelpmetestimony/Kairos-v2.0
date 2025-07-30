@@ -245,7 +245,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     setHasInteracted(true);
 
     try {
-      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api/crisis/chat' : 'https://kairos-v2-0.onrender.com/api/crisis/chat';
+      const apiUrl = `${config.apiBaseUrl}/crisis/chat`;
       const authToken = localStorage.getItem('auth_token');
       
       if (!authToken) {
