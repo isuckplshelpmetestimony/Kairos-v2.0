@@ -8,7 +8,7 @@ const { sql } = require('../database/connection.js');
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, phone } = req.body;
 
     // Check if user exists
     const existingUsers = await sql`
@@ -24,8 +24,8 @@ router.post('/register', async (req, res) => {
 
     // Create user
     const newUser = await sql`
-      INSERT INTO users (email, password)
-      VALUES (${email}, ${hashedPassword})
+      INSERT INTO users (email, phone, password_hash)
+      VALUES (${email}, ${phone}, ${hashedPassword})
       RETURNING id, email
     `;
 
