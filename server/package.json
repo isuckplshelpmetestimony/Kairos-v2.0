@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node index.cjs",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:smoke": "jest tests/api/smoke.test.js",
+    "test:api": "jest tests/api/",
+    "test:unit": "jest --testPathIgnorePatterns=tests/api/",
+    "test:ci": "jest --ci --coverage --watchAll=false"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -24,5 +31,10 @@
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.5",
+    "supertest": "^7.1.4"
   }
 }

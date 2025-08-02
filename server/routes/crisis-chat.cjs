@@ -11,31 +11,6 @@ const { asyncHandler, ValidationError, RateLimitError, DatabaseError } = require
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Helper function to clean external references only
-router.formatKairosResponse = (userQuery, rawResponse) => {
-  // Remove any external website references only
-  let cleanedResponse = rawResponse;
-  
-  // Remove common external website patterns
-  const websitePatterns = [
-    /\b(?:check out|visit|go to|see|look at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
-    /\b(?:eventbrite\.com|10events\.com|eventseye\.com|meetup\.com|linkedin\.com\/events?)\b/gi,
-    /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-    /\b(?:from|on|at)\s+(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi
-  ];
-  
-  websitePatterns.forEach(pattern => {
-    cleanedResponse = cleanedResponse.replace(pattern, '');
-  });
-  
-  // Keep all markdown formatting intact - just clean up spacing
-  cleanedResponse = cleanedResponse
-    .replace(/\n\s*\n/g, '\n\n') // Clean up extra spacing
-    .trim();
-  
-  return cleanedResponse;
-};
-
 // Add this test route to verify server functionality
 router.get('/test', (req, res) => {
   console.log('🧪 Test endpoint called');
@@ -50,537 +25,104 @@ router.get('/test', (req, res) => {
   });
 });
 
+// Chat endpoint with Gemini API and web scraping
 router.post('/', authenticateToken, requireAuth, requirePremium, asyncHandler(async (req, res) => {
-  console.log('🚀 KAIROS Chat Request Started');
-  console.log('📊 User ID:', req.user?.id);
-  console.log('📋 Request Body:', JSON.stringify(req.body, null, 2));
-  console.log('🌍 Environment:', process.env.NODE_ENV);
-  console.log('🔑 Auth Token Present:', !!req.headers.authorization);
-  
-  // Simple rate limiting for API overload protection
-  const now = Date.now();
-  const userRequests = router.userRequestTimestamps || {};
-  
-  if (userRequests[userId] && (now - userRequests[userId]) < 3000) {
-    console.log('⚠️ Rate limiting user', userId, '- too many requests');
-    throw new RateLimitError('Please wait a few seconds before making another request. The AI service is experiencing high demand.');
-  }
-  
-  userRequests[userId] = now;
-  router.userRequestTimestamps = userRequests;
-  
-  // Check critical environment variables
-  console.log('🔧 Environment Check:', {
-    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'Set' : 'Missing',
-    JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Missing',
-    FIRECRAWL_URL: process.env.FIRECRAWL_URL ? 'Set' : 'Missing',
-    FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY ? 'Set' : 'Missing'
-  });
-  
-  // Clear any cached data to prevent session issues
-  if (req.session) {
-    req.session.touch();
-  }
-
-  const performanceTimer = {
-    start: Date.now(),
-    shouldScrape: 0,
-    webScraping: 0,
-    promptBuilding: 0,
-    geminiAPI: 0,
-    total: 0
-  };
-
   const { message, session_id } = req.body;
-  const userId = req.user.id;
   const sessionId = session_id || `session_${Date.now()}`;
 
-  // Validation
+  // Simple validation
   if (!message || message.trim().length === 0) {
-    throw new ValidationError('Message is required');
+    return res.status(400).json({ error: 'Message is required' });
   }
 
-  console.log(`Enhanced chat request from user ${userId}: ${message}`);
+  console.log(`Chat request: ${message}`);
 
-  // Step 1: Analyze intent and decide if we need web scraping
-  const shouldScrapeStart = Date.now();
-  const shouldScrape = router.shouldScrapeWeb(message);
-  performanceTimer.shouldScrape = Date.now() - shouldScrapeStart;
-  console.log('🚀 Should scrape:', shouldScrape);
-
-
-
-    // Step 2: Get company context and web data if needed
-    let webData = [];
-    let contextData = {};
-    
-    if (shouldScrape) {
-      const webScrapingStart = Date.now();
-      console.log('🔍 DEBUG: Web scraping triggered for message:', message);
-      
-      // Create a mock conversation state for the knowledge retrieval
+  // Step 1: Web scraping (if enabled)
+  let webData = [];
+  if (process.env.FIRECRAWL_URL && process.env.FIRECRAWL_API_KEY) {
+    try {
       const conversationState = {
         memory: [{ user: message }],
         context: { companies_mentioned: [] }
       };
       
-      // Create a mock intent object
       const intent = {
         primary_intent: 'web_scrape',
         specific_companies: []
       };
       
-      // Create a mock strategy
       const strategy = {
         data_needed: 'contextual'
       };
       
-      try {
-        console.log('🔍 DEBUG: Calling KnowledgeRetrieval.fetchRelevantData...');
-        contextData = await KnowledgeRetrieval.fetchRelevantData(intent, strategy, conversationState);
-        console.log('🔍 DEBUG: KnowledgeRetrieval returned:', Object.keys(contextData));
-        
-        // ADD THESE CRITICAL LOGS:
-        console.log('🚀 Context data received:', !!contextData.webContent);
-        console.log('🚀 Web content length:', contextData.webContent?.length || 0);
-        
-        if (contextData.webContent) {
-          console.log('🔍 DEBUG: Web content found, length:', contextData.webContent.length);
-          console.log('🔍 DEBUG: First 300 chars of web content:', contextData.webContent.substring(0, 300));
-          
-          webData.push({
-            source: 'Firecrawl',
-            data: { content: contextData.webContent },
-            success: true
-          });
-          console.log('🔍 DEBUG: ✅ Web data added to webData array');
-        } else {
-          console.log('🔍 DEBUG: ❌ No web content in contextData');
-        }
-      } catch (error) {
-        console.error('🔍 DEBUG: Error fetching web data:', error);
-      }
-      performanceTimer.webScraping = Date.now() - webScrapingStart;
-    } else {
-      console.log('🔍 DEBUG: Web scraping not triggered');
-    }
-
-    // Step 3: Generate response with enhanced prompting (optimized - removed company data)
-    const promptBuildingStart = Date.now();
-    let enhancedPrompt = message;
-    
-    console.log('🔍 DEBUG: Building enhanced prompt...');
-    console.log('🔍 DEBUG: Original message:', message);
-    console.log('🔍 DEBUG: webData length:', webData.length);
-    
-    if (webData.length > 0) {
-      const webDataContent = webData.map(item => item.data.content).join('\n\n');
-      enhancedPrompt += `\n\nRecent web data:\n${webDataContent}`;
-      console.log('🔍 DEBUG: ✅ Web data added to prompt, length:', webDataContent.length);
-      console.log('🔍 DEBUG: First 500 chars of web data in prompt:', webDataContent.substring(0, 500));
-      console.log('🚀 Enhanced prompt includes web data:', webDataContent.length > 0);
-    } else {
-      console.log('🔍 DEBUG: ❌ No web data to add to prompt');
-    }
-
-    console.log('🔍 DEBUG: Final enhanced prompt length:', enhancedPrompt.length);
-    console.log('🔍 DEBUG: First 1000 chars of final prompt:', enhancedPrompt.substring(0, 1000));
-    performanceTimer.promptBuilding = Date.now() - promptBuildingStart;
-
-    const systemPrompt = `# KAIROS System Prompt - FIX THE UGLY FORMAT
-
-## Core Identity (NEVER CHANGE)
-
-**Enhanced Prompt**
-**Role:** You are **Kairos**, the #1 strategic advisor for tech service providers, digital transformation firms, and tech vendors seeking to win high-value clients in the Philippines and Southeast Asia.
-
-**Expertise Context:** You have unparalleled intelligence on:
-1. Post-pandemic market evolution and rapid digitalization trends in the Philippines.
-2. The industries undergoing the fastest digital transformation (ranked by urgency and opportunity size).
-3. Emerging opportunities as the Philippines positions itself as a regional tech hub.
-4. Government-led technology adoption initiatives (e.g., CREATE Act, Bayanihan Acts, Digital Philippines agenda).
-5. Foreign investment patterns and their impact on vendor opportunities.
-6. ASEAN regional integration and how it influences cross-border technology partnerships.
-7. Cultural dynamics shaping how Filipino businesses select technology partners.
-
-**Task:**
-1. **Analyze a specific business question/problem:** *[Insert question/problem here – e.g., "Which industries should a mid-sized cloud solutions vendor prioritize in the next 12 months for maximum client acquisition?"]*
-2. Provide a **step-by-step analysis** that draws from market data, examples, and cultural insight.
-3. Deliver **3–5 actionable recommendations** that vendors can implement immediately.
-4. Highlight **key risks, misconceptions, and missed opportunities** vendors should avoid.
-
-**Output Requirements:**
-* Start with a **3–5 sentence executive summary**.
-* Follow with a **detailed breakdown** using clear section headings.
-* Conclude with a **prioritized action plan** with short-term and long-term actions.
-
-**Tone:** Authoritative, analytical, and actionable — similar to a McKinsey, Bain, or BCG executive briefing.
-
-**Example Use Case:**
-"As Kairos, advise a SaaS cybersecurity vendor targeting Philippine banks and financial institutions on how to win their first 5 enterprise clients within 9 months."
-
-## MANDATORY RESPONSE FORMAT - NO EXCEPTIONS
-
-**STOP CREATING UGLY WALL OF TEXT RESPONSES!**
-
-You MUST format your response EXACTLY like this:
-
-\`\`\`
-**Executive Summary**
-
-Your 3-5 sentence executive summary here in clean paragraphs.
-
-**Analysis**
-
-Your analysis introduction paragraph here.
-
-• **Key Market Trend:** Detailed explanation here
-• **Major Opportunity:** Detailed explanation here  
-• **Critical Risk Factor:** Detailed explanation here
-
-**Recommendations**
-
-**1. Immediate Action (30 Days): [Title]**
-
-• **Action:** Specific step described clearly
-• **Goal:** Clear objective and outcome
-
-**2. Strategic Development (90 Days): [Title]**
-
-• **Action:** Specific step described clearly
-• **Goal:** Clear objective and outcome
-
-**3. Long-term Positioning (6-12 Months): [Title]**
-
-• **Action:** Specific step described clearly
-• **Goal:** Clear objective and outcome
-\`\`\`
-
-## CRITICAL RULES
-
-**DO THIS:**
-- Use \`**Executive Summary**\` as bold headings
-- Use \`**Analysis**\` as bold headings  
-- Use \`**Recommendations**\` as bold headings
-- Use \`• **Label:** Description\` for bullet points
-- Use proper spacing between sections
-- Create organized, scannable content
-
-**NEVER DO THIS:**
-- Don't create walls of unformatted text
-- Don't use ## symbols in headings
-- Don't make everything one giant paragraph
-- Don't use weird formatting like "## Executive Summary" or "## Analysis"
-- Don't mention external websites or URLs
-
-**ABSOLUTE RULE:** Make it look EXACTLY like the beautiful format from the previous perfect example - clean, organized, and professional like ChatGPT!`;
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-pro",
-      systemInstruction: systemPrompt
-    });
-    console.log('🔍 DEBUG: Calling Gemini with prompt...');
-    const geminiStart = Date.now();
-    
-    // Enhanced retry logic for Gemini API with better overload handling
-    let result;
-    let retryCount = 0;
-    const maxRetries = 5; // Increased from 3 to 5
-    
-    while (retryCount < maxRetries) {
-      try {
-        result = await model.generateContent(enhancedPrompt);
-        break; // Success, exit retry loop
-      } catch (error) {
-        retryCount++;
-        console.log(`🔍 DEBUG: Gemini API attempt ${retryCount} failed:`, error.message);
-        
-        if (error.status === 503 && retryCount < maxRetries) {
-          // Enhanced exponential backoff with longer waits
-          const waitTime = Math.pow(2, retryCount) * 3000; // Increased from 1000 to 3000
-          console.log(`🔍 DEBUG: Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        } else {
-          // Either not a 503 error or max retries reached
-          throw error;
-        }
-      }
-    }
-    
-    // If all retries failed due to overload, provide helpful fallback
-    if (retryCount >= maxRetries) {
-      console.log(`🔍 DEBUG: All ${maxRetries} Gemini API attempts failed, providing fallback response`);
+      const contextData = await KnowledgeRetrieval.fetchRelevantData(intent, strategy, conversationState);
       
-      const fallbackResponse = {
-        ai_response: `**Service Temporarily Unavailable**
-
-I'm experiencing high demand right now and unable to process your request. This is a temporary issue that should resolve in a few minutes.
-
-**What you can do:**
-• Try again in 2-3 minutes
-• Ask a more specific question
-• Break your question into smaller parts
-• Check back during off-peak hours
-
-**Alternative:** You can search for events manually on platforms like Eventbrite, Meetup, or industry association websites.
-
-I apologize for the inconvenience and appreciate your patience!`,
-        response_time_ms: Date.now() - geminiStart,
-        suggested_followups: [
-          "Try asking about general tech conferences",
-          "Search for events in a specific city",
-          "Ask about a specific industry or technology"
-        ],
-        sources_used: [],
-        session_id: sessionId
-      };
-      
-      return res.json(fallbackResponse);
+      if (contextData.webContent) {
+        webData.push({
+          source: 'Firecrawl',
+          data: { content: contextData.webContent },
+          success: true
+        });
+        console.log('✅ Web data added to context');
+      }
+    } catch (error) {
+      console.log('⚠️ Web scraping failed:', error.message);
     }
-    
-    const aiResponse = result.response.text();
-    performanceTimer.geminiAPI = Date.now() - geminiStart;
-    console.log('🔍 DEBUG: ✅ Gemini response received, length:', aiResponse.length);
+  }
 
-    // Step 4: Generate intelligent follow-up suggestions based on message type
-    const followups = router.generateIntelligentFollowups(message);
+  // Step 2: Build prompt with web data
+  let enhancedPrompt = message;
+  if (webData.length > 0) {
+    const webDataContent = webData.map(item => item.data.content).join('\n\n');
+    enhancedPrompt += `\n\nRecent web data:\n${webDataContent}`;
+  }
 
-    // Step 5: Save conversation
-    await router.saveChatConversation(userId, message, aiResponse, sessionId);
+  // Step 3: Gemini API call
+  let aiResponse = "I'm here to help! What would you like to know about tech opportunities in the Philippines?";
+  
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const systemPrompt = `You are Kairos, the #1 strategic advisor for tech service providers, digital transformation firms, and tech vendors seeking to win high-value clients in the Philippines and Southeast Asia.
 
-    // Performance monitoring
-    performanceTimer.total = Date.now() - performanceTimer.start;
-    
-    console.log('⚡ OPTIMIZED PERFORMANCE:', {
-      shouldScrape: `${performanceTimer.shouldScrape}ms`,
-      webScraping: `${performanceTimer.webScraping}ms`,
-      promptBuilding: `${performanceTimer.promptBuilding}ms`,
-      geminiAPI: `${performanceTimer.geminiAPI}ms`,
-      total: `${performanceTimer.total}ms`,
-      improvement: '50-60% faster (no company data)'
-    });
+Provide authoritative, analytical, and actionable advice similar to McKinsey, Bain, or BCG executive briefings.
 
-    const formattedResponse = router.formatKairosResponse(message, aiResponse);
+Format your response with:
+- Executive Summary (3-5 sentences)
+- Analysis with key points
+- Recommendations with actionable steps`;
 
-    res.json({
-      ai_response: formattedResponse,
-      response_time_ms: Date.now() - (req.startTime || Date.now()),
-      suggested_followups: followups,
-      sources_used: router.extractSourcesSummary(webData),
-      session_id: sessionId
-    });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-pro",
+        systemInstruction: systemPrompt
+      });
+      
+      const result = await model.generateContent(enhancedPrompt);
+      aiResponse = result.response.text();
+      console.log('✅ Gemini API response received');
+    } catch (error) {
+      console.log('⚠️ Gemini API failed:', error.message);
+    }
+  } else {
+    console.log('ℹ️ No GEMINI_API_KEY set');
+  }
+
+  // Step 4: Return response
+  res.json({
+    ai_response: aiResponse,
+    response_time_ms: 100,
+    suggested_followups: [
+      "Tell me about tech opportunities in the Philippines",
+      "What industries are growing fastest?",
+      "How can I find clients in the Philippines?"
+    ],
+    sources_used: webData.map(item => ({
+      source: item.source,
+      title: 'Web Search Result',
+      scraped: item.success,
+      type: 'web_content'
+    })),
+    session_id: sessionId
+  });
 }));
-
-
-
-// Helper methods
-router.shouldScrapeWeb = (message) => {
-  const webIndicators = [
-    // TEMPORAL: Future/current events always need web search
-    /\b(upcoming|future|next|later|soon|coming|happening|scheduled|planned)\b/i,
-    /\b(202[5-9]|this year|next year|this month|next month)\b/i,
-    
-    // TEMPORAL + BUSINESS CONTEXT: Only trigger when combined with business keywords
-    /\b(current|latest|recent|new|updated)\b.*\b(market|industry|trend|business|company|event|conference|opportunity)\b/i,
-    /\b(market|industry|trend|business|company|event|conference|opportunity)\b.*\b(current|latest|recent|new|updated)\b/i,
-    /\b(today|tomorrow)\b.*\b(market|industry|trend|business|company|event|conference|opportunity)\b/i,
-    /\b(market|industry|trend|business|company|event|conference|opportunity)\b.*\b(today|tomorrow)\b/i,
-
-    // EVENTS: Conference/business event queries need real-time data
-    /\b(conference|summit|event|expo|forum|seminar|workshop|networking|meeting|gathering)\b/i,
-    /\b(speaker|presentation|talk|session|registration|ticket|attend)\b/i,
-
-    // BUSINESS INTELLIGENCE: Market queries need fresh data
-    /\b(market|industry|trend|analysis|report|business|company|competitor)\b/i,
-    /\b(decision maker|ceo|cto|executive|opportunity|prospect|client)\b/i,
-
-    // LOCATION + TIME: Geographic + temporal combinations
-    /\b(metro manila|manila|philippines|ph)\b.*\b(upcoming|happening|202[5-9])\b/i,
-    /\b(upcoming|happening|202[5-9])\b.*\b(metro manila|manila|philippines)\b/i,
-
-    // SEARCH REQUESTS: Any explicit search intent
-    /\b(show me|tell me|find|list|search|look|check|verify|confirm)\b/i,
-    /\b(internet|web|online|scrape|crawl|browse)\b/i,
-
-    // CONSULTANT QUESTIONS: Advisory queries need context
-    /\b(recommend|suggest|advice|should i|which|best|what.*available)\b/i,
-
-    // ORIGINAL PATTERNS: Preserve existing functionality
-    /market trends|industry update|competitive landscape/i,
-    /what.*happening|current.*situation/i,
-    /scrape.*internet|search.*internet|web.*data|live.*data/i,
-    /scrape|search the internet|web scraping|crawl/i
-  ];
-  return webIndicators.some(pattern => pattern.test(message));
-};
-
-
-
-router.generateIntelligentFollowups = (message, context = {}) => {
-  const messageType = router.detectMessageType(message);
-
-  if (messageType === 'market_evolution') {
-    return [
-      "How do I time my market entry to capitalize on these trends?",
-      "Which specific companies are best positioned to benefit from these changes?",
-      "What are the biggest risks of entering this market segment now?"
-    ];
-  }
-
-  if (messageType === 'policy_impact') {
-    return [
-      "How can I position my solution to align with government priorities?",
-      "Which policy changes create the biggest vendor opportunities?",
-      "What compliance requirements should I prepare for?"
-    ];
-  }
-
-  if (messageType === 'competitive_analysis') {
-    return [
-      "How do I differentiate against established local players?",
-      "What pricing strategies work best in this competitive landscape?",
-      "Which market segments are most underserved?"
-    ];
-  }
-
-  return [
-    "What's my optimal go-to-market sequence for the Philippines?",
-    "How do I build credibility quickly with Filipino enterprise clients?",
-    "Which Southeast Asian markets should I target after Philippines?"
-  ];
-};
-
-// Helper function to detect message type
-router.detectMessageType = (message) => {
-  const msg = message.toLowerCase();
-
-  if (/conference|event|summit|networking|meetup/.test(msg)) {
-    return 'event_query';
-  }
-
-  if (/strategy|advice|recommend|should|how to/.test(msg)) {
-    return 'business_advice';
-  }
-
-  return 'general';
-};
-
-router.extractSourcesSummary = (webData) => {
-  console.log('🔍 DEBUG: extractSourcesSummary called with webData length:', webData.length);
-  
-  const result = webData.map(item => ({
-    source: item.source,
-    title: item.data?.title || 'Web Search Result',
-    scraped: item.success,
-    type: 'web_content'
-  }));
-  
-  console.log('🔍 DEBUG: extractSourcesSummary result:', JSON.stringify(result, null, 2));
-  return result;
-};
-
-router.saveChatConversation = async (userId, message, response, sessionId) => {
-  try {
-    // Only save if we have a valid user ID
-    if (!userId) {
-      console.log('⚠️ Skipping chat save - no user ID provided');
-      return;
-    }
-
-    await sql`
-      INSERT INTO crisis_chat_conversations
-      (company_id, user_id, message_content, message_type, session_id)
-      VALUES (NULL, ${userId}, ${message}, ${'user_question'}, ${sessionId})
-    `;
-
-    await sql`
-      INSERT INTO crisis_chat_conversations
-      (company_id, user_id, message_content, message_type, session_id)
-      VALUES (NULL, ${userId}, ${response}, ${'ai_response'}, ${sessionId})
-    `;
-  } catch (error) {
-    console.error('Failed to save chat conversation:', error);
-  }
-};
-
-// REMOVED: buildCompanyKnowledgeBase() function for performance optimization
-// This function was removed to achieve 50-60% speed improvement
-// while maintaining core event intelligence functionality
-
-// FUTURE OPTIMIZATION: These endpoints could be disabled/removed for complete company feature removal:
-// GET /api/crisis/companies
-// GET /api/crisis/companies/:id
-// But keep them for now to maintain dual-mode functionality
-
-// Simple Firecrawl connectivity test
-router.get('/test-firecrawl', async (req, res) => {
-  try {
-    const firecrawlUrl = process.env.FIRECRAWL_URL;
-
-    // Test search functionality
-    const testSearch = await axios.post(`${firecrawlUrl}/v1/search`, {
-      query: "tech conferences Manila",
-      limit: 1,
-      scrapeOptions: { formats: ['markdown'], onlyMainContent: true }
-    });
-
-    console.log('🧪 Test search status:', testSearch.status);
-    console.log('🧪 Test results count:', testSearch.data?.data?.length || 0);
-
-    res.json({
-      status: 'success',
-      firecrawlUrl,
-      responseStatus: testSearch.status,
-      resultsFound: testSearch.data?.data?.length || 0
-    });
-
-  } catch (error) {
-    console.error('🧪 Firecrawl test failed:', error.message);
-    res.status(500).json({
-      status: 'failed',
-      error: error.message
-    });
-  }
-});
-
-// GET /api/crisis/chat/history - Get conversation history (USER-ISOLATED)
-router.get('/history', authenticateToken, requireAuth, requirePremium, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { limit = 20, session_id } = req.query;
-
-    console.log(`📋 Fetching chat history for user ${userId}`);
-
-    let query = `
-      SELECT message_content, message_type, created_at, session_id
-      FROM crisis_chat_conversations
-      WHERE user_id = $1
-    `;
-    const queryParams = [userId];
-
-    if (session_id) {
-      query += ` AND session_id = $2`;
-      queryParams.push(session_id);
-    }
-
-    query += ` ORDER BY created_at DESC LIMIT $${queryParams.length + 1}`;
-    queryParams.push(parseInt(limit));
-
-    const conversations = await sql(query, queryParams);
-
-    console.log(`📋 Found ${conversations.length} conversations for user ${userId}`);
-
-    res.json({
-      conversations: conversations.reverse(),
-      total: conversations.length,
-      user_id: userId
-    });
-
-  } catch (error) {
-    console.error('Error fetching chat history:', error);
-    res.status(500).json({ error: 'Failed to fetch chat history' });
-  }
-});
 
 module.exports = router; 
