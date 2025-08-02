@@ -11,7 +11,8 @@ const { validate, sanitize } = require('../middleware/validation.js');
 const { chatMessageSchema } = require('../schemas/chatSchemas.js');
 
 const router = express.Router();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const { config } = require('../config/index.js');
+const genAI = new GoogleGenerativeAI(config.ai.geminiApiKey);
 
 // Add this test route to verify server functionality
 router.get('/test', (req, res) => {
@@ -36,7 +37,7 @@ router.post('/', authenticateToken, requireAuth, requirePremium, sanitize, valid
 
   // Step 1: Web scraping (if enabled)
   let webData = [];
-  if (process.env.FIRECRAWL_URL && process.env.FIRECRAWL_API_KEY) {
+  if (config.scraping.isFirecrawlEnabled) {
     try {
       const conversationState = {
         memory: [{ user: message }],
@@ -77,7 +78,7 @@ router.post('/', authenticateToken, requireAuth, requirePremium, sanitize, valid
   // Step 3: Gemini API call
   let aiResponse = "I'm here to help! What would you like to know about tech opportunities in the Philippines?";
   
-  if (process.env.GEMINI_API_KEY) {
+  if (config.ai.isGeminiEnabled) {
     try {
       const systemPrompt = `You are Kairos, the #1 strategic advisor for tech service providers, digital transformation firms, and tech vendors seeking to win high-value clients in the Philippines and Southeast Asia.
 
@@ -100,7 +101,7 @@ Format your response with:
       console.log('⚠️ Gemini API failed:', error.message);
     }
   } else {
-    console.log('ℹ️ No GEMINI_API_KEY set');
+    console.log('ℹ️ Gemini AI not configured');
   }
 
   // Step 4: Return response

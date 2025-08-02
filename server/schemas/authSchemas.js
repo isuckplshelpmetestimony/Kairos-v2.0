@@ -12,13 +12,16 @@ const emailSchema = Joi.string()
   });
 
 // Password validation with security requirements
+const { getValidationRules } = require('../config/index.js');
+const passwordRules = getValidationRules().password;
+
 const passwordSchema = Joi.string()
-  .min(8)
-  .max(128)
+  .min(passwordRules.minLength)
+  .max(passwordRules.maxLength)
   .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
   .required()
   .messages({
-    'string.min': 'Password must be at least 8 characters long',
+    'string.min': `Password must be at least ${passwordRules.minLength} characters long`,
     'string.max': 'Password is too long',
     'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
     'any.required': 'Password is required'

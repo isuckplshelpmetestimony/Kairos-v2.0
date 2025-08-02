@@ -1,11 +1,12 @@
 "use server";
 const { neon } = require('@neondatabase/serverless');
+const { config } = require('../config/index.js');
 
-if (!process.env.DATABASE_URL) {
+if (!config.database.url) {
   throw new Error('DATABASE_URL is not set');
 }
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = neon(config.database.url);
 
 const testConnection = async () => {
   try {

@@ -1,14 +1,17 @@
 const Joi = require('joi');
 
 // Chat message validation schema
+const { getLimits } = require('../config/index.js');
+const limits = getLimits();
+
 const chatMessageSchema = Joi.object({
   message: Joi.string()
     .min(1)
-    .max(5000)
+    .max(limits.chatMessageLength)
     .required()
     .messages({
       'string.min': 'Message cannot be empty',
-      'string.max': 'Message is too long (maximum 5000 characters)',
+      'string.max': `Message is too long (maximum ${limits.chatMessageLength} characters)`,
       'any.required': 'Message is required'
     }),
   session_id: Joi.string()

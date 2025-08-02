@@ -1,5 +1,9 @@
 require('dotenv/config');
-console.log('DATABASE_URL at runtime:', process.env.DATABASE_URL);
+
+// Initialize centralized configuration
+const { initializeConfig, config } = require('./config/index.js');
+const validatedConfig = initializeConfig();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -30,11 +34,11 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler.js'
 
 // In CommonJS, __filename and __dirname are available by default.
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.server.port;
 
 // CORS configuration - MUST BE FIRST
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://kairos-v2-0.onrender.com'],
+  origin: [config.cors.origin, 'https://kairos-v2-0.onrender.com'],
   credentials: true
 }));
 
@@ -62,13 +66,13 @@ app.use(cors({
 
 // Session configuration for rate limiting
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'kairos-anti-scraping-secret',
+  secret: config.security.sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.server.isProduction,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: config.security.sessionMaxAge
   }
 }));
 
@@ -134,7 +138,7 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  console.log('JWT_SECRET at runtime:', process.env.JWT_SECRET);
+  console.log('✅ Database connected successfully');
   console.log('🛡️ Anti-scraping protection enabled');
 
   app.listen(PORT, () => {

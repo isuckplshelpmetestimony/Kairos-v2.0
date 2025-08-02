@@ -7,6 +7,15 @@ process.env.NODE_ENV = 'test';
 // Test database configuration
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
 
+// Set required environment variables for tests
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only-minimum-32-chars';
+}
+
+if (!process.env.SESSION_SECRET) {
+  process.env.SESSION_SECRET = 'test-session-secret-key-for-testing-only-minimum-32-chars';
+}
+
 // Mock console methods to reduce noise in tests
 const originalConsoleLog = console.log;
 const originalConsoleError = console.error;

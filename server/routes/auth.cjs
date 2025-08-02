@@ -36,9 +36,10 @@ router.post('/register', sanitize, validate(registerSchema), asyncHandler(async 
   }
 
   // Generate token
+  const { config } = require('../config/index.js');
   const token = jwt.sign(
     { userId: newUser[0].id, email: newUser[0].email },
-    process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+    config.security.jwtSecret,
     { expiresIn: '7d' }
   );
 
@@ -81,9 +82,10 @@ router.post('/login', sanitize, validate(loginSchema), asyncHandler(async (req, 
   }
 
   // Generate token
+  const { config } = require('../config/index.js');
   const token = jwt.sign(
     { userId: user.id, email: user.email },
-    process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+    config.security.jwtSecret,
     { expiresIn: '7d' }
   );
 
@@ -110,9 +112,10 @@ router.get('/verify', async (req, res) => {
 
     let decoded;
     try {
+      const { config } = require('../config/index.js');
       decoded = jwt.verify(
         token, 
-        process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
+        config.security.jwtSecret
       );
       console.log('Decoded token:', decoded);
     } catch (err) {
