@@ -6,6 +6,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const express = require('express');
 const axios = require('axios');
 const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
+const { asyncHandler, ValidationError, RateLimitError, DatabaseError } = require('../middleware/errorHandler.js');
 
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -49,7 +50,7 @@ router.get('/test', (req, res) => {
   });
 });
 
-router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res) => {
+router.post('/', authenticateToken, requireAuth, requirePremium, asyncHandler(async (req, res) => {
   console.log('🚀 KAIROS Chat Request Started');
   console.log('📊 User ID:', req.user?.id);
   console.log('📋 Request Body:', JSON.stringify(req.body, null, 2));
@@ -57,16 +58,12 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
   console.log('🔑 Auth Token Present:', !!req.headers.authorization);
   
   // Simple rate limiting for API overload protection
-  const userId = req.user?.id;
   const now = Date.now();
   const userRequests = router.userRequestTimestamps || {};
   
   if (userRequests[userId] && (now - userRequests[userId]) < 3000) {
     console.log('⚠️ Rate limiting user', userId, '- too many requests');
-    return res.status(429).json({
-      error: 'Please wait a few seconds before making another request. The AI service is experiencing high demand.',
-      retry_after: 3
-    });
+    throw new RateLimitError('Please wait a few seconds before making another request. The AI service is experiencing high demand.');
   }
   
   userRequests[userId] = now;
@@ -95,18 +92,22 @@ router.post('/', authenticateToken, requireAuth, requirePremium, async (req, res
     total: 0
   };
 
-  try {
-    const { message, session_id } = req.body;
-    const userId = req.user.id;
-    const sessionId = session_id || `session_${Date.now()}`;
+  const { message, session_id } = req.body;
+  const userId = req.user.id;
+  const sessionId = session_id || `session_${Date.now()}`;
 
-    console.log(`Enhanced chat request from user ${userId}: ${message}`);
+  // Validation
+  if (!message || message.trim().length === 0) {
+    throw new ValidationError('Message is required');
+  }
 
-    // Step 1: Analyze intent and decide if we need web scraping
-    const shouldScrapeStart = Date.now();
-    const shouldScrape = router.shouldScrapeWeb(message);
-    performanceTimer.shouldScrape = Date.now() - shouldScrapeStart;
-    console.log('🚀 Should scrape:', shouldScrape);
+  console.log(`Enhanced chat request from user ${userId}: ${message}`);
+
+  // Step 1: Analyze intent and decide if we need web scraping
+  const shouldScrapeStart = Date.now();
+  const shouldScrape = router.shouldScrapeWeb(message);
+  performanceTimer.shouldScrape = Date.now() - shouldScrapeStart;
+  console.log('🚀 Should scrape:', shouldScrape);
 
 
 
@@ -369,45 +370,7 @@ I apologize for the inconvenience and appreciate your patience!`,
       sources_used: router.extractSourcesSummary(webData),
       session_id: sessionId
     });
-  } catch (error) {
-    console.error('❌ KAIROS CHAT ERROR:', error);
-    console.error('❌ Error Stack:', error.stack);
-    console.error('❌ Error Details:', {
-      message: error.message,
-      name: error.name,
-      code: error.code,
-      status: error.status,
-      statusText: error.statusText
-    });
-    console.error('❌ Request Context:', {
-      userId: req.user?.id,
-      userEmail: req.user?.email,
-      method: req.method,
-      url: req.url,
-      headers: Object.keys(req.headers)
-    });
-
-    // Provide specific error messages based on error type
-    let errorMessage = 'I encountered an error processing your request. Please try again.';
-
-    if (error.status === 503 || (error.message && error.message.includes('overloaded'))) {
-      errorMessage = 'The AI service is experiencing high demand right now. Please try again in 2-3 minutes, or ask a more specific question. You can also try breaking your question into smaller parts.';
-    } else if (error.message && error.message.includes('API key')) {
-      errorMessage = 'Authentication error with AI service. Please contact support.';
-    } else if (error.message && error.message.includes('quota')) {
-      errorMessage = 'AI service quota exceeded. Please try again later.';
-    } else if (error.message && error.message.includes('fetch')) {
-      errorMessage = 'Network error occurred. Please check your connection and try again.';
-    } else if (error.message && error.message.includes('database')) {
-      errorMessage = 'Database connection error. Please try again later.';
-    }
-
-    res.status(500).json({
-      error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+}));
 
 
 

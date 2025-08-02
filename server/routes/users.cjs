@@ -7,24 +7,24 @@ if (typeof sql !== 'function') {
 }
 console.log('sql type in users.cjs:', typeof sql); // Should print 'function'
 const { authenticateToken, requireAdmin } = require('../middleware/auth.js');
+const { asyncHandler, ValidationError, AuthorizationError, DatabaseError } = require('../middleware/errorHandler.js');
 
 const router = express.Router();
 
 // Get all users (admin only)
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const users = await sql`
-      SELECT id, email, phone, role, status, premium_until, created_at
-      FROM users
-      ORDER BY created_at DESC
-    `;
+router.get('/', authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+  const users = await sql`
+    SELECT id, email, phone, role, status, premium_until, created_at
+    FROM users
+    ORDER BY created_at DESC
+  `;
 
-    res.json({ users });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+  if (!users) {
+    throw new DatabaseError('Failed to fetch users from database');
   }
-});
+
+  res.json({ users });
+}));
 
 // Grant premium access (admin only)
 router.post('/grant-premium', authenticateToken, requireAdmin, async (req, res) => {

@@ -25,6 +25,9 @@ const crisisRoutes = require('./routes/crisis.cjs');
 const crisisChatRoutes = require('./routes/crisis-chat.cjs');
 const statusRoutes = require('./routes/status.cjs');
 
+// Import error handling middleware
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler.js');
+
 // In CommonJS, __filename and __dirname are available by default.
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -117,14 +120,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('🚨 Server error:', err);
-  res.status(500).json({ 
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
-});
+// 404 handler for unmatched routes (must be before error handler)
+app.use(notFoundHandler);
+
+// Centralized error handling middleware (must be last)
+app.use(errorHandler);
 
 // Start server
 const startServer = async () => {
