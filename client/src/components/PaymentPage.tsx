@@ -90,7 +90,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
           <h1 className="text-3xl font-bold text-white mb-2">
             Unlock <span className="gradient-text">Premium Events</span>
           </h1>
-          <p className="text-xl text-gray-300">₱1,500 Monthly Subscription</p>
+          <p className="text-xl text-gray-300">₱1,000 Monthly Subscription</p>
         </div>
         
         {/* GCash Payment Section */}
@@ -148,7 +148,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
               </svg>
               Monthly Subscription
             </h3>
-            <p className="text-2xl font-bold gradient-text mb-2">₱1,500</p>
+            <p className="text-2xl font-bold gradient-text mb-2">₱1,000</p>
             <p className="text-gray-300 text-sm">Recurring payment required each month</p>
           </div>
           
@@ -163,7 +163,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onClose }) => {
             <div className="space-y-3 text-gray-300">
               <div className="flex items-start space-x-3">
                 <span className="badge-premium text-xs">1</span>
-                <p>Send ₱1,500 via GCash to the number above</p>
+                <p>Send ₱1,000 via GCash to the number above</p>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="badge-premium text-xs">2</span>
