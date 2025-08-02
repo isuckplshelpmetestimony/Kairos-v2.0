@@ -1,0 +1,60 @@
+# Affected Imports Analysis
+
+## Files Importing crisis-chat.cjs (KEEPING THIS VERSION)
+
+### 1. server/index.cjs
+- Line 24: `const crisisChatRoutes = require('./routes/crisis-chat.cjs');`
+- Usage: Main server file, registers routes at `/api/crisis/chat`
+- Status: ✅ ACTIVE - This file is being used
+
+### 2. index.cjs (root level)
+- Line 4: `const crisisChatRoutes = require('./routes/crisis-chat.cjs');`
+- Usage: Root level server file, registers routes at `/api/crisis/chat`
+- Status: ✅ ACTIVE - This file is being used
+
+## Files Importing crisis-chat.js (REMOVING THIS VERSION)
+
+### NONE FOUND
+- No files in the codebase import `crisis-chat.js`
+- Status: ✅ SAFE TO REMOVE - No dependencies found
+
+## Route Registration Analysis
+
+### server/index.cjs (lines 70-75)
+```javascript
+app.use('/api/crisis', /* apiRateLimiter, */ crisisRoutes);
+app.use('/api/crisis/chat', /* chatRateLimiter, */ crisisChatRoutes);
+```
+
+### index.cjs (root level)
+- Similar route registration pattern
+- Both files register crisis-chat.cjs routes at `/api/crisis/chat`
+
+## Endpoints Available After Cleanup
+
+### POST /api/crisis/chat/
+- Enhanced chat endpoint with web scraping
+- Rate limiting protection
+- Performance monitoring
+
+### GET /api/crisis/chat/test
+- Server verification endpoint
+- Environment variable checks
+- Database connectivity test
+
+### GET /api/crisis/chat/history
+- Chat history retrieval
+- Session-based filtering
+- User isolation
+
+### GET /api/crisis/chat/test-firecrawl
+- Firecrawl connectivity test
+- Web scraping verification
+
+## Validation Checklist
+- [ ] All imports point to crisis-chat.cjs
+- [ ] No files import crisis-chat.js
+- [ ] Route registration works correctly
+- [ ] All endpoints respond properly
+- [ ] No broken import errors
+- [ ] Application builds without warnings 
