@@ -8,6 +8,8 @@ if (typeof sql !== 'function') {
 console.log('sql type in users.cjs:', typeof sql); // Should print 'function'
 const { authenticateToken, requireAdmin } = require('../middleware/auth.js');
 const { asyncHandler, ValidationError, AuthorizationError, DatabaseError } = require('../middleware/errorHandler.js');
+const { validate, sanitize } = require('../middleware/validation.js');
+const { userIdSchema, premiumStatusSchema, userStatusSchema } = require('../schemas/userSchemas.js');
 
 const router = express.Router();
 
@@ -27,13 +29,9 @@ router.get('/', authenticateToken, requireAdmin, asyncHandler(async (req, res) =
 }));
 
 // Grant premium access (admin only)
-router.post('/grant-premium', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/grant-premium', authenticateToken, requireAdmin, sanitize, validate(userIdSchema), async (req, res) => {
   try {
     const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
 
     // Set premium until 1 year from now
     const premiumUntil = new Date();
@@ -61,13 +59,9 @@ router.post('/grant-premium', authenticateToken, requireAdmin, async (req, res) 
 });
 
 // Revoke premium access (admin only)
-router.post('/revoke-premium', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/revoke-premium', authenticateToken, requireAdmin, sanitize, validate(userIdSchema), async (req, res) => {
   try {
     const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
 
     const result = await sql`
       UPDATE users 

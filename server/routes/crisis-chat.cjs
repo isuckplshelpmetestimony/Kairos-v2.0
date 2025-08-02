@@ -7,6 +7,8 @@ const express = require('express');
 const axios = require('axios');
 const KnowledgeRetrieval = require('../utils/knowledge-retrieval');
 const { asyncHandler, ValidationError, RateLimitError, DatabaseError } = require('../middleware/errorHandler.js');
+const { validate, sanitize } = require('../middleware/validation.js');
+const { chatMessageSchema } = require('../schemas/chatSchemas.js');
 
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -26,14 +28,9 @@ router.get('/test', (req, res) => {
 });
 
 // Chat endpoint with Gemini API and web scraping
-router.post('/', authenticateToken, requireAuth, requirePremium, asyncHandler(async (req, res) => {
+router.post('/', authenticateToken, requireAuth, requirePremium, sanitize, validate(chatMessageSchema), asyncHandler(async (req, res) => {
   const { message, session_id } = req.body;
   const sessionId = session_id || `session_${Date.now()}`;
-
-  // Simple validation
-  if (!message || message.trim().length === 0) {
-    return res.status(400).json({ error: 'Message is required' });
-  }
 
   console.log(`Chat request: ${message}`);
 

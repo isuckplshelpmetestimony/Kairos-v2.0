@@ -5,23 +5,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sql } = require('../database/connection.js');
 const { asyncHandler, ValidationError, AuthenticationError, DatabaseError } = require('../middleware/errorHandler.js');
+const { validate, sanitize } = require('../middleware/validation.js');
+const { loginSchema, registerSchema } = require('../schemas/authSchemas.js');
 
 // Register
-router.post('/register', asyncHandler(async (req, res) => {
+router.post('/register', sanitize, validate(registerSchema), asyncHandler(async (req, res) => {
   const { email, password, phone } = req.body;
-
-  // Validation
-  if (!email || !password || !phone) {
-    throw new ValidationError('Email, password, and phone are required');
-  }
-
-  if (!email.includes('@')) {
-    throw new ValidationError('Please provide a valid email address');
-  }
-
-  if (password.length < 6) {
-    throw new ValidationError('Password must be at least 6 characters long');
-  }
 
   // Check if user exists
   const existingUsers = await sql`
@@ -61,17 +50,8 @@ router.post('/register', asyncHandler(async (req, res) => {
 }));
 
 // Login
-router.post('/login', asyncHandler(async (req, res) => {
+router.post('/login', sanitize, validate(loginSchema), asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  
-  // Validation
-  if (!email || !password) {
-    throw new ValidationError('Email and password are required');
-  }
-
-  if (!email.includes('@')) {
-    throw new ValidationError('Please provide a valid email address');
-  }
 
   console.log('Login attempt for:', email); // Debug log
 

@@ -34,8 +34,8 @@ describe('🚀 Kairos API Smoke Tests', () => {
     test('POST /api/auth/register - User registration', async () => {
       const testUserData = {
         email: `smoke-test-${Date.now()}@example.com`,
-        password: 'testpassword123',
-        phone: '+1234567890'
+        password: 'StrongPass123!',
+        phone: '09123456789'
       };
 
       const response = await request(app)

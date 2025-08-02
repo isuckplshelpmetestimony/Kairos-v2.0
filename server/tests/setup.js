@@ -25,8 +25,8 @@ global.testUtils = {
   // Generate test user data
   createTestUser: () => ({
     email: `test-${Date.now()}@example.com`,
-    password: 'testpassword123',
-    phone: '+1234567890'
+    password: 'StrongPass123!',
+    phone: '09123456789'
   }),
   
   // Generate test auth token
